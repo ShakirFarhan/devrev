@@ -1,0 +1,93 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AuthProvider{
+  local
+  github
+  google
+}
+enum AccountStatus{
+  active
+  suspended
+  deactivated
+}
+enum UserRole{
+  user 
+  admin
+  moderator
+}
+model User{
+  id String @unique @default(uuid())
+  email String @unique 
+  password String @unique
+  salt String
+  fullName String @map("full_name")
+  username String
+  bio String
+  profilePhoto String @map("profile_photo")
+  skills String[]
+  location Int[] // [latitude, Longitude]
+  githubUsername String @map("github_username")
+  status AccountStatus @default(active)
+  role UserRole @default(user)
+  provider AuthProvider @default(local)
+  lastLogin DateTime @map("last_login")
+  socials Json 
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  projects Project[] @relation("owner")
+  reviews_given Review[]
+  project_liked  Like[] 
+}
+
+
+model Project{
+  id String @unique @default(uuid())
+  name String
+  description String
+  tags String[]
+  ownerId String 
+  owner User @relation("owner",fields: [ownerId],references: [id])
+  // Links
+  hostedLink String @map("hosted_link")
+  demo String 
+  githubLink String @map("github_links")
+  likes Like[]
+  reviews Review[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+}
+model Like{
+  id String @unique @default(uuid())
+  projectId String
+  project Project @relation(fields: [projectId],references: [id],onDelete: Cascade)
+  userId String
+  user User @relation(fields: [userId],references: [id],onDelete: Cascade)
+}
+model Review{
+  id String @unique @default(uuid())
+  userId String 
+  user User @relation(fields: [userId],references: [id],onDelete: Cascade)
+  projectId String 
+  project Project @relation(fields: [projectId], references: [id],onDelete: Cascade)
+  message String
+  replies Reply[]
+}
+model Reply {
+  id String @id @default(uuid())
+  parentId String?
+  parent Reply? @relation("ParentChild",fields: [parentId], references: [id],onDelete: Cascade)
+  children Reply[] @relation("ParentChild")
+  message String
+  reviewId String 
+  review Review @relation(fields: [reviewId],references: [id],onDelete: Cascade)
+}
