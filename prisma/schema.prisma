@@ -29,21 +29,22 @@ model User{
   id String @unique @default(uuid())
   email String @unique 
   password String @unique
-  salt String
-  fullName String @map("full_name")
-  username String
-  bio String
-  profilePhoto String @map("profile_photo")
+  salt String?
+  fullName String? @map("full_name")
+  username String @unique
+  bio String?
+  profilePhoto String? @map("profile_photo")
   skills String[]
+  verified Boolean @default(false)
   location Int[] // [latitude, Longitude]
-  githubUsername String @map("github_username")
+  githubUsername String? @map("github_username")
   status AccountStatus @default(active)
   role UserRole @default(user)
   provider AuthProvider @default(local)
-  lastLogin DateTime @map("last_login")
-  socials Json 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  lastLogin DateTime? @map("last_login")
+  socials Json?
+  createdAt DateTime? @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
   projects Project[] @relation("owner")
   reviews_given Review[]
   project_liked  Like[] 
