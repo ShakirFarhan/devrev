@@ -2,8 +2,7 @@ export interface CreateUserPayload {
   email: string;
   password: string;
   username: string;
-  firstName: string;
-  lastName: string;
+  fullName: string;
 }
 export interface LoginUserPayload {
   email: string;
@@ -19,6 +18,7 @@ export interface GitHubUserPayload {
   login: string;
   avatar_url: string;
   email: string;
+  name: string;
 }
 export interface GoogleUserPayload {
   id: string;
@@ -34,8 +34,14 @@ export interface User {
   id: string;
   username: string;
   email: string;
-  profileId: string;
   provider: string;
   created_at: Date;
   updated_at: Date;
+}
+export interface searchUserPayload {
+  limit: number;
+  page: number;
+  name?: string;
+  skills?: string[];
+  order: -1 | 1;
 }

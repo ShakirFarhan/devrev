@@ -2,20 +2,23 @@ import { ApolloServer } from '@apollo/server';
 import { User } from './user';
 import { Project } from './project';
 
-export default async function createApolloServer() {
+export default async function createApolloGraphQLServer() {
   const graphQLServer = new ApolloServer({
     typeDefs: `#graphql
     ${User.typeDefs}
     ${Project.typeDefs}
+
     type Query{
-       ${User.queries}
-       ${Project.queries}
+      ${User.queries}
+      ${Project.queries}
+  
     }
     type Mutation{
-      ${User.mutations}
-      ${Project.mutations}
-    }
-  `,
+     ${User.mutations}
+     ${Project.mutations}
+
+
+    }`,
     resolvers: {
       Query: {
         ...User.resolvers.queries,
@@ -28,7 +31,6 @@ export default async function createApolloServer() {
     },
     introspection: true,
   });
-
   await graphQLServer.start();
   return graphQLServer;
 }

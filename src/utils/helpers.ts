@@ -1,7 +1,6 @@
 import nodemailer from 'nodemailer';
 export const sendMail = async (email: string, token: string) => {
   try {
-    console.log(process.env.EMAIL_PORT);
     const transport = nodemailer.createTransport({
       port: Number(process.env.EMAIL_PORT),
       host: process.env.HOST,
@@ -21,7 +20,6 @@ export const sendMail = async (email: string, token: string) => {
       <a href="https://gradgigs.com/confirm-email?token=${token}">Confirm Email</a>
     `,
     });
-    console.log('Email sent successfully');
   } catch (error) {
     console.log('Error while sending email : ' + error);
   }

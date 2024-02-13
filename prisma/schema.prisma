@@ -35,7 +35,7 @@ model User{
   bio String?
   profilePhoto String? @map("profile_photo")
   skills String[]
-  verified Boolean @default(false)
+  verified Boolean? @default(false)
   location Int[] // [latitude, Longitude]
   githubUsername String? @map("github_username")
   status AccountStatus @default(active)

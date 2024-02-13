@@ -1,10 +1,15 @@
 import { createHmac, randomBytes, randomUUID } from 'crypto';
 import { prismaClient } from '../lib/db';
-import throwCustomError, { ErrorTypes } from '../utils/error-handler';
+import throwCustomError, {
+  ErrorTypes,
+  catchErrorHandler,
+} from '../utils/error-handler';
 import {
   CreateUserPayload,
   GitHubUserPayload,
   LoginUserPayload,
+  User,
+  searchUserPayload,
 } from '../utils/types';
 import JWT from 'jsonwebtoken';
 import qs from 'qs';
@@ -21,8 +26,8 @@ class UserService {
       },
     });
   }
-  public static userByEmail(email: string) {
-    return prismaClient.user.findUnique({
+  public static async userByEmail(email: string) {
+    return await prismaClient.user.findUnique({
       where: {
         email,
       },
@@ -34,12 +39,49 @@ class UserService {
         where: {
           id: userId,
         },
+        include: {
+          projects: true,
+        },
       });
 
       return user;
     } catch (error: any) {
-      console.log(error);
-      throwCustomError(error.message, ErrorTypes.INTERNAL_SERVER_ERROR);
+      throw catchErrorHandler(error);
+    }
+  }
+  public static async searchUsers(payload: searchUserPayload) {
+    const { limit = 10, page = 1, name, skills } = payload;
+    let query: any = {};
+    if (name) {
+      query.fullName = { contains: name, mode: 'insensitive' };
+      query.username = { contains: name, mode: 'insensitive' };
+    }
+    if (skills) {
+      const lowerCase = skills.map((skill) => skill.toLowerCase());
+      query.skills = { hasSome: lowerCase };
+    }
+
+    try {
+      const users = await prismaClient.user.findMany({
+        where: {
+          ...query,
+        },
+        take: limit,
+        skip: (page - 1) * limit,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        include: {
+          projects: true,
+        },
+      });
+      return {
+        users,
+        page,
+        totalPages: Math.ceil((await prismaClient.user.count(query)) / limit),
+      };
+    } catch (error) {
+      throw catchErrorHandler(error);
     }
   }
   // User-Auth Related Code
@@ -59,7 +101,7 @@ class UserService {
   }
   // Auth Using JWT
   public static async createUser(payload: CreateUserPayload) {
-    const { email, password, username, firstName, lastName } = payload;
+    const { email, password, username, fullName } = payload;
 
     try {
       if (password.length < 8)
@@ -85,12 +127,14 @@ class UserService {
       }
       const salt = randomBytes(32).toString('hex');
       const hashedPassword = UserService.generateHashPassword(password, salt);
+
       let user = await prismaClient.user.create({
         data: {
           username,
           email,
           password: hashedPassword,
           salt,
+          fullName,
         },
       });
 
@@ -106,8 +150,7 @@ class UserService {
           'User registered successfully. Please check your email for confirmation.',
       };
     } catch (error: any) {
-      console.log(error);
-      throwCustomError(error.message, ErrorTypes.INTERNAL_SERVER_ERROR);
+      throw catchErrorHandler(error);
     }
   }
   private static decodeToken(token: string) {
@@ -147,8 +190,7 @@ class UserService {
         user: updatedUser,
       };
     } catch (error: any) {
-      console.log(error);
-      throwCustomError(error.message, ErrorTypes.INTERNAL_SERVER_ERROR);
+      throw catchErrorHandler(error);
     }
   }
   public static async loginUser(payload: LoginUserPayload) {
@@ -161,10 +203,20 @@ class UserService {
       );
 
     try {
-      const user = await UserService.userByEmail(email);
-      if (!user)
+      const user = await this.userByEmail(email);
+      if (!user) {
         return throwCustomError('User not Found.', ErrorTypes.NOT_FOUND);
-      if (!user.verified) {
+      }
+      const hashedPassword = UserService.generateHashPassword(
+        password,
+        user.salt as string
+      );
+      if (hashedPassword !== user.password)
+        return throwCustomError(
+          'Incorrect Password',
+          ErrorTypes.BAD_USER_INPUT
+        );
+      if (user.verified) {
         const payload = {
           id: user.id,
           email: user.email,
@@ -188,15 +240,7 @@ class UserService {
 
       if (!user.salt)
         return throwCustomError('Invalid Password', ErrorTypes.BAD_REQUEST);
-      const hashedPassword = UserService.generateHashPassword(
-        password,
-        user.salt
-      );
-      if (hashedPassword !== user.password)
-        return throwCustomError(
-          'Incorrect Password',
-          ErrorTypes.BAD_USER_INPUT
-        );
+
       const token = UserService.generateToken(
         {
           id: user.id,
@@ -209,7 +253,7 @@ class UserService {
         user,
       };
     } catch (error: any) {
-      throwCustomError(error.message, ErrorTypes.INTERNAL_SERVER_ERROR);
+      throw catchErrorHandler(error);
     }
   }
   // Github Auth
@@ -229,9 +273,10 @@ class UserService {
         },
       });
       const decoded = qs.parse(data) as { access_token: string };
+
       return decoded;
     } catch (error: any) {
-      throwCustomError(error.message, ErrorTypes.INTERNAL_SERVER_ERROR);
+      throw catchErrorHandler(error);
     }
   }
 
@@ -245,7 +290,7 @@ class UserService {
 
       return data;
     } catch (error: any) {
-      throwCustomError(error.message, ErrorTypes.INTERNAL_SERVER_ERROR);
+      throw catchErrorHandler(error);
     }
   }
   // Github OAuth/Authentication
@@ -262,9 +307,8 @@ class UserService {
       )) as {
         access_token: string;
       };
-      const { email, avatar_url, login } = (await UserService.getGithubUser(
-        access_token
-      )) as GitHubUserPayload;
+      const { email, avatar_url, login, name } =
+        (await UserService.getGithubUser(access_token)) as GitHubUserPayload;
 
       const user = await prismaClient.user.upsert({
         where: {
@@ -274,6 +318,7 @@ class UserService {
           username: login,
           githubUsername: login,
           email,
+          fullName: name,
           verified: true,
           password: randomUUID(),
           provider: 'github',
@@ -301,8 +346,7 @@ class UserService {
         user,
       };
     } catch (error: any) {
-      console.log(error);
-      throwCustomError(error.message, ErrorTypes.INTERNAL_SERVER_ERROR);
+      throw catchErrorHandler(error);
     }
   }
   // Google OAuth/Authentication
@@ -345,8 +389,7 @@ class UserService {
         user,
       };
     } catch (error: any) {
-      console.log(error);
-      throwCustomError(error.message, ErrorTypes.INTERNAL_SERVER_ERROR);
+      throw catchErrorHandler(error);
     }
   }
   // Middleware to Check for user token
@@ -375,10 +418,55 @@ class UserService {
         user,
       };
     } catch (error: any) {
-      console.log('Error in Middleware');
-      console.log(error);
-      throwCustomError(error.message, ErrorTypes.INTERNAL_SERVER_ERROR);
+      throw catchErrorHandler(error);
     }
+  }
+  public static async changePassword(
+    oldPassword: string,
+    newPassword: string,
+    user: User
+  ) {
+    if (!user || !user.id) {
+      return throwCustomError(
+        'Both user ID and profile ID are required.',
+        ErrorTypes.BAD_USER_INPUT
+      );
+    }
+    console.log('here');
+    if (!oldPassword || oldPassword.length < 8) {
+      return throwCustomError(
+        'Invalid Old Password',
+        ErrorTypes.BAD_USER_INPUT
+      );
+    }
+    if (!newPassword || newPassword.length < 8) {
+      return throwCustomError(
+        'Invalid New Password',
+        ErrorTypes.BAD_USER_INPUT
+      );
+    }
+    const userExists = await prismaClient.user.findUnique({
+      where: {
+        id: user.id,
+      },
+    });
+    if (!userExists)
+      return throwCustomError('User not found.', ErrorTypes.NOT_FOUND);
+    let userSalt = userExists.salt as string;
+    const oldHasedPassword = this.generateHashPassword(oldPassword, userSalt);
+    const hashedPassword = this.generateHashPassword(newPassword, userSalt);
+    if (oldHasedPassword !== userExists.password) {
+      return throwCustomError('Invalid Password', ErrorTypes.BAD_USER_INPUT);
+    }
+    await prismaClient.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        password: hashedPassword,
+      },
+    });
+    return 'Password Changed Successfully';
   }
 }
 export default UserService;
