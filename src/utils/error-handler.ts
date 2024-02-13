@@ -18,6 +18,10 @@ export const ErrorTypes = {
     errorCode: 'UNAUTHENTICATED',
     errorStatus: 401,
   },
+  FORBIDDEN: {
+    errorCode: 'UNAUTHENTICATED',
+    errorStatus: 403,
+  },
   ALREADY_EXISTS: {
     errorCode: 'ALREADY_EXISTS',
     errorStatus: 400,

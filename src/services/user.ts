@@ -204,6 +204,7 @@ class UserService {
 
     try {
       const user = await this.userByEmail(email);
+
       if (!user) {
         return throwCustomError('User not Found.', ErrorTypes.NOT_FOUND);
       }
@@ -216,7 +217,7 @@ class UserService {
           'Incorrect Password',
           ErrorTypes.BAD_USER_INPUT
         );
-      if (user.verified) {
+      if (!user.verified) {
         const payload = {
           id: user.id,
           email: user.email,
@@ -224,7 +225,7 @@ class UserService {
         let token = UserService.generateToken(payload, '1h');
         await sendMail(user.email, token);
         return {
-          user: null,
+          user: {},
           message: 'Email has been sent. Please Verify!',
         };
       }

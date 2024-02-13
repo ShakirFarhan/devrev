@@ -34,6 +34,7 @@ export interface User {
   id: string;
   username: string;
   email: string;
+  role: 'admin' | 'user' | 'moderator';
   provider: string;
   created_at: Date;
   updated_at: Date;
@@ -44,4 +45,22 @@ export interface searchUserPayload {
   name?: string;
   skills?: string[];
   order: -1 | 1;
+}
+
+export interface PostProjectPayload {
+  name: string;
+  description: string;
+  tags: string[];
+  link: string;
+  demo?: string;
+  githubLink?: string;
+}
+
+export interface UpdateProjectPayload {
+  name: string;
+  description: string;
+  tags: string[];
+  link: string;
+  demo?: string;
+  githubLink?: string;
 }

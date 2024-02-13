@@ -33,7 +33,8 @@ type Project {
   name:String,
   description:String,
   tags:[String],
-  hostedLink:String,
+  owner:User,
+  link:String,
   demo:String,
   githubLink:String,
   reviews:[Review]
