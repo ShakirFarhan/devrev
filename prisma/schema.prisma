@@ -57,7 +57,7 @@ model Project{
   name String
   description String
   coverImage String? @map("cover_image")
-  slug String @unique
+  slug String
   tags String[]
   ownerId String 
   owner User @relation("owner",fields: [ownerId],references: [id])
@@ -68,7 +68,7 @@ model Project{
   reviews Review[]
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-  @@index([id,ownerId])
+  @@index([ownerId,slug])
 }
 model Like{
   id String @id  @default(uuid())

@@ -47,7 +47,8 @@ export interface searchUserPayload {
   order: -1 | 1;
 }
 
-export interface PostProjectPayload {
+export interface ProjectPayload {
+  projectId?: string;
   name: string;
   description: string;
   tags: string[];
@@ -55,12 +56,9 @@ export interface PostProjectPayload {
   demo?: string;
   githubLink?: string;
 }
-
-export interface UpdateProjectPayload {
-  name: string;
-  description: string;
-  tags: string[];
-  link: string;
-  demo?: string;
-  githubLink?: string;
+export interface Projects {
+  limit: number;
+  page: number;
+  name?: number;
+  tags?: string[];
 }

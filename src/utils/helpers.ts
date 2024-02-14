@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { prismaClient } from '../lib/db';
 export const sendMail = async (email: string, token: string) => {
   try {
     const transport = nodemailer.createTransport({
@@ -41,4 +42,17 @@ export function generateUsername(fullName?: string): string {
   const finalUsername = `${sanitizedFullName}${randomDigits}`;
 
   return finalUsername;
+}
+
+export async function checkProjectExists(projectName: string, userId: string) {
+  const project = await prismaClient.project.findFirst({
+    where: {
+      ownerId: userId,
+      name: {
+        equals: projectName,
+        mode: 'insensitive',
+      },
+    },
+  });
+  return project;
 }
