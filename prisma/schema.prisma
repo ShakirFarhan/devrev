@@ -83,7 +83,8 @@ model Review{
   user User @relation(fields: [userId],references: [id],onDelete: Cascade)
   projectId String 
   project Project @relation(fields: [projectId], references: [id],onDelete: Cascade)
-  message String
+  message String?
+  ratings Int 
   replies Reply[]
 }
 model Reply {

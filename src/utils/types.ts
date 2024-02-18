@@ -62,3 +62,8 @@ export interface Projects {
   name?: number;
   tags?: string[];
 }
+export interface ReviewPayload {
+  projectId: string;
+  ratings: number;
+  message?: string;
+}

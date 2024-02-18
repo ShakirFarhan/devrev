@@ -56,3 +56,20 @@ export async function checkProjectExists(projectName: string, userId: string) {
   });
   return project;
 }
+export const isUserAuthenticated =
+  (next: any) => (root: any, args: any, context: any, info: any) => {
+    return new Promise((resolve, reject) => {
+      if (!context.user || !context.user.id) {
+        reject(new Error('Authentication required.'));
+        return;
+      }
+
+      next(root, args, context, info)
+        .then((result: any) => {
+          resolve(result);
+        })
+        .catch((error: any) => {
+          reject(error);
+        });
+    });
+  };

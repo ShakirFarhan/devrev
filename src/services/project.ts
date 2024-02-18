@@ -1,4 +1,4 @@
-import { ProjectPayload, Projects, User } from '../utils/types';
+import { ProjectPayload, Projects, ReviewPayload, User } from '../utils/types';
 import throwCustomError, {
   ErrorTypes,
   catchErrorHandler,
@@ -75,13 +75,6 @@ class ProjectService {
     }
   }
   public static async postProject(payload: ProjectPayload, user: User) {
-    if (!user || !user.id) {
-      throwCustomError(
-        'Not Authorized. Login First.',
-        ErrorTypes.UNAUTHENTICATED
-      );
-    }
-
     try {
       const nameTaken = await checkProjectExists(payload.name, user.id);
       if (nameTaken)
@@ -117,9 +110,6 @@ class ProjectService {
   }
 
   public static async updateProject(payload: ProjectPayload, user: User) {
-    if (!user || !user.id) {
-      return throwCustomError('Not Authorized.', ErrorTypes.UNAUTHENTICATED);
-    }
     if (payload.projectId) {
       return throwCustomError('Provide Project id', ErrorTypes.BAD_USER_INPUT);
     }
@@ -152,10 +142,6 @@ class ProjectService {
     }
   }
   public static async deleteProject(projectId: string, user: User) {
-    if (!user || !user.id) {
-      return throwCustomError('Not Authorized.', ErrorTypes.UNAUTHENTICATED);
-    }
-    console.log(user);
     if (!projectId) {
       return throwCustomError('Provide Project id', ErrorTypes.BAD_USER_INPUT);
     }
@@ -189,6 +175,57 @@ class ProjectService {
       throw catchErrorHandler(error);
     }
   }
+  public static async postReview(review: ReviewPayload, user: User) {
+    if (!(review.ratings > 0 && review.ratings <= 5)) {
+      return throwCustomError(
+        'Rating should be in range 1 to 5',
+        ErrorTypes.BAD_USER_INPUT
+      );
+    }
+    try {
+      const reviewExists = await prismaClient.review.findFirst({
+        where: {
+          userId: user.id,
+          projectId: review.projectId,
+        },
+      });
+      if (reviewExists) {
+        return throwCustomError(
+          'Review already Exists.',
+          ErrorTypes.ALREADY_EXISTS
+        );
+      }
+      const newReview = await prismaClient.review.create({
+        data: {
+          userId: user.id,
+          projectId: review.projectId,
+          message: review.message,
+          ratings: review.ratings,
+        },
+      });
+      return newReview;
+    } catch (error) {
+      throw catchErrorHandler(error);
+    }
+  }
+  public static async deleteReview(reviewId: string, user: User) {
+    try {
+      const review = await prismaClient.review.findUnique({
+        where: {
+          id: reviewId,
+        },
+      });
+      if (!review)
+        return throwCustomError('Review not Found', ErrorTypes.NOT_FOUND);
+
+      if (user.role !== 'admin' && user.id !== review.userId) {
+      }
+    } catch (error) {
+      throw catchErrorHandler(error);
+    }
+  }
+  public static async updateReview(review: ReviewPayload, user: User) {}
+  public static async projectCodeFromGithub(githubUrl: string, user: User) {}
 }
 
 export default ProjectService;
