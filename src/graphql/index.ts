@@ -7,17 +7,16 @@ export default async function createApolloGraphQLServer() {
     typeDefs: `#graphql
     ${User.typeDefs}
     ${Project.typeDefs}
-
+    scalar Upload
     type Query{
       ${User.queries}
       ${Project.queries}
-  
+      
     }
     type Mutation{
      ${User.mutations}
      ${Project.mutations}
-
-
+      uploadFile(file:Upload!):String!
     }`,
     resolvers: {
       Query: {

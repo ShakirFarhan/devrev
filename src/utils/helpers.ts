@@ -1,19 +1,20 @@
 import nodemailer from 'nodemailer';
 import { prismaClient } from '../lib/db';
+import * as Config from '../config/index';
 export const sendMail = async (email: string, token: string) => {
   try {
     const transport = nodemailer.createTransport({
-      port: Number(process.env.EMAIL_PORT),
-      host: process.env.HOST,
-      service: process.env.SERVICE,
-      secure: Boolean(process.env.SECURE),
+      port: Number(Config.MAILER_PORT),
+      host: Config.MAILER_HOST,
+      service: Config.MAILER_SERVICE,
+      secure: Boolean(Config.MAILER_SECURE),
       auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASSWORD,
+        user: Config.GMAIL_USER,
+        pass: Config.GMAIL_PASSWORD,
       },
     });
     await transport.sendMail({
-      from: process.env.USER_EMAIL,
+      from: Config.GMAIL_USER,
       to: email,
       subject: 'Confirm Your Email Address',
       text: `
