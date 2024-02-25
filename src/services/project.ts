@@ -1,4 +1,10 @@
-import { ProjectPayload, Projects, ReviewPayload, User } from '../utils/types';
+import {
+  ProjectPayload,
+  Projects,
+  ReplyPayload,
+  ReviewPayload,
+  User,
+} from '../utils/types';
 import throwCustomError, {
   ErrorTypes,
   catchErrorHandler,
@@ -33,6 +39,36 @@ class ProjectService {
           (await prismaClient.project.count(query)) / limit
         ),
       };
+    } catch (error) {
+      throw catchErrorHandler(error);
+    }
+  }
+  public static async getProjectReviews(projectId: string) {
+    try {
+      const reviews = await prismaClient.review.findMany({
+        where: {
+          projectId,
+          replies: {},
+        },
+        include: {
+          replies: {
+            where: {
+              parentId: null,
+            },
+            include: {
+              user: true,
+              children: true,
+            },
+          },
+          user: true,
+        },
+      });
+      if (!reviews)
+        return throwCustomError(
+          'Invalid Project id.',
+          ErrorTypes.BAD_USER_INPUT
+        );
+      return reviews;
     } catch (error) {
       throw catchErrorHandler(error);
     }
@@ -224,7 +260,91 @@ class ProjectService {
       throw catchErrorHandler(error);
     }
   }
-  public static async updateReview(review: ReviewPayload, user: User) {}
+  public static async updateReview(review: ReviewPayload, user: User) {
+    try {
+      const reviewExists = await prismaClient.review.update({
+        where: {
+          id: review.id,
+          userId: user.id,
+        },
+        data: {
+          message: review.message,
+          ratings: review.ratings,
+        },
+      });
+      if (!reviewExists)
+        return throwCustomError('Review Not found.', ErrorTypes.NOT_FOUND);
+      return reviewExists;
+    } catch (error) {
+      throw catchErrorHandler(error);
+    }
+  }
+  public static async addReply(reply: ReplyPayload, user: User) {
+    try {
+      const newReply = await prismaClient.reply.create({
+        data: {
+          message: reply.message,
+          reviewId: reply.reviewId,
+          parentId: reply.parentId,
+          userId: user.id,
+        },
+        include: {
+          review: true,
+          parent: true,
+        },
+      });
+      if (!newReply)
+        return throwCustomError('Unable to add Reply', ErrorTypes.BAD_REQUEST);
+
+      return newReply;
+    } catch (error) {
+      throw catchErrorHandler(error);
+    }
+  }
+  public static async updateReply(
+    reply: { replyId: string; message: string },
+    user: User
+  ) {
+    try {
+      const updatedReply = await prismaClient.reply.update({
+        where: {
+          id: reply.replyId as string,
+          userId: user.id,
+        },
+        data: {
+          message: reply.message,
+        },
+      });
+
+      if (!updatedReply)
+        return throwCustomError('Reply Not found.', ErrorTypes.BAD_USER_INPUT);
+      return updatedReply;
+    } catch (error) {
+      throw catchErrorHandler(error);
+    }
+  }
+  public static async deleteReply(replyId: string, user: User) {
+    try {
+      let reply = await prismaClient.reply.findUnique({
+        where: {
+          id: replyId,
+        },
+      });
+      if (!reply)
+        return throwCustomError('Reply not found', ErrorTypes.NOT_FOUND);
+      if (reply.userId !== user.id && user.role !== 'admin') {
+        return throwCustomError('Unauthorized Access', ErrorTypes.FORBIDDEN);
+      }
+      reply = await prismaClient.reply.delete({
+        where: {
+          id: replyId,
+        },
+      });
+      return reply;
+    } catch (error) {
+      throw catchErrorHandler(error);
+    }
+  }
   public static async projectCodeFromGithub(githubUrl: string, user: User) {}
 }
 

@@ -66,4 +66,12 @@ export interface ReviewPayload {
   projectId: string;
   ratings: number;
   message?: string;
+  id?: string;
+}
+
+export interface ReplyPayload {
+  id?: string;
+  message: string;
+  parentId: string;
+  reviewId: string;
 }

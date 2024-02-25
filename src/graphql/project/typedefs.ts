@@ -19,5 +19,6 @@ type Reply{
   children:[Reply]
   message:String,
   review:Review
+  user: User
 }
 `;

@@ -1,6 +1,11 @@
 import ProjectService from '../../services/project';
 import { isUserAuthenticated } from '../../utils/helpers';
-import { ProjectPayload, Projects, ReviewPayload } from '../../utils/types';
+import {
+  ProjectPayload,
+  Projects,
+  ReplyPayload,
+  ReviewPayload,
+} from '../../utils/types';
 
 const queries = {
   projects: async (_: any, payload: Projects, context: any) => {
@@ -19,6 +24,11 @@ const queries = {
   projectById: async (_: any, payload: { projectId: string }, context: any) => {
     return await ProjectService.projectById(payload.projectId);
   },
+  projectReviews: isUserAuthenticated(
+    async (_: any, payload: { projectId: string }) => {
+      return await ProjectService.getProjectReviews(payload.projectId);
+    }
+  ),
 };
 const mutations = {
   postProject: isUserAuthenticated(
@@ -42,6 +52,36 @@ const mutations = {
   postReview: isUserAuthenticated(
     async (_: any, payload: ReviewPayload, context: any) => {
       return await ProjectService.postReview(payload, context.user);
+    }
+  ),
+  deleteReview: isUserAuthenticated(
+    async (_: any, payload: { reviewId: string }, context: any) => {
+      return await ProjectService.deleteReview(payload.reviewId, context.user);
+    }
+  ),
+  updateReview: isUserAuthenticated(
+    async (_: any, payload: ReviewPayload, context: any) => {
+      return await ProjectService.updateReview(payload, context.user);
+    }
+  ),
+  addReply: isUserAuthenticated(
+    async (_: any, payload: ReplyPayload, context: any) => {
+      return await ProjectService.addReply(payload, context.user);
+    }
+  ),
+  updateReply: isUserAuthenticated(
+    async (
+      _: any,
+      payload: { replyId: string; message: string },
+      context: any
+    ) => {
+      return await ProjectService.updateReply(payload, context.user);
+    }
+  ),
+
+  deleteReply: isUserAuthenticated(
+    async (_: any, payload: { replyId: string }, context: any) => {
+      return await ProjectService.deleteReply(payload.replyId, context.user);
     }
   ),
 };

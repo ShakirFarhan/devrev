@@ -208,6 +208,13 @@ class UserService {
       if (!user) {
         return throwCustomError('User not Found.', ErrorTypes.NOT_FOUND);
       }
+      // User registered with Google & Github cannot login manually
+      if (user?.provider !== 'local') {
+        return throwCustomError(
+          `Login using ${user?.provider}`,
+          ErrorTypes.BAD_REQUEST
+        );
+      }
       const hashedPassword = UserService.generateHashPassword(
         password,
         user.salt as string
@@ -229,13 +236,7 @@ class UserService {
           message: 'Email has been sent. Please Verify!',
         };
       }
-      // User registered with Google & Github cannot login manually
-      if (user?.provider !== 'local') {
-        return throwCustomError(
-          `Login using ${user?.provider}`,
-          ErrorTypes.BAD_REQUEST
-        );
-      }
+
       if (!user)
         return throwCustomError('User Not Found.', ErrorTypes.NOT_FOUND);
 

@@ -46,6 +46,7 @@ model User{
   createdAt DateTime? @default(now()) @map("created_at")
   updatedAt DateTime? @updatedAt @map("updated_at")
   projects Project[] @relation("owner")
+  replies Reply[]
   reviews_given Review[]
   project_liked  Like[] 
 
@@ -95,4 +96,6 @@ model Reply {
   message String
   reviewId String 
   review Review @relation(fields: [reviewId],references: [id],onDelete: Cascade)
+  userId String
+  user User @relation(fields: [userId],references: [id])
 }
