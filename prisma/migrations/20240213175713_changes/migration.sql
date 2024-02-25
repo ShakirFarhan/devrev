@@ -12,21 +12,24 @@ CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
-    "salt" TEXT NOT NULL,
-    "full_name" TEXT NOT NULL,
+    "salt" TEXT,
+    "full_name" TEXT,
     "username" TEXT NOT NULL,
-    "bio" TEXT NOT NULL,
-    "profile_photo" TEXT NOT NULL,
+    "bio" TEXT,
+    "profile_photo" TEXT,
     "skills" TEXT[],
+    "verified" BOOLEAN DEFAULT false,
     "location" INTEGER[],
-    "github_username" TEXT NOT NULL,
+    "github_username" TEXT,
     "status" "AccountStatus" NOT NULL DEFAULT 'active',
     "role" "UserRole" NOT NULL DEFAULT 'user',
     "provider" "AuthProvider" NOT NULL DEFAULT 'local',
-    "last_login" TIMESTAMP(3) NOT NULL,
-    "socials" JSONB NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL
+    "last_login" TIMESTAMP(3),
+    "socials" JSONB,
+    "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3),
+
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -34,20 +37,26 @@ CREATE TABLE "Project" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT NOT NULL,
+    "cover_image" TEXT NOT NULL,
+    "slug" TEXT NOT NULL,
     "tags" TEXT[],
     "ownerId" TEXT NOT NULL,
     "hosted_link" TEXT NOT NULL,
-    "demo" TEXT NOT NULL,
-    "github_links" TEXT NOT NULL,
+    "demo" TEXT,
+    "github_links" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Project_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Like" (
     "id" TEXT NOT NULL,
     "projectId" TEXT NOT NULL,
-    "userId" TEXT NOT NULL
+    "userId" TEXT NOT NULL,
+
+    CONSTRAINT "Like_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -55,7 +64,9 @@ CREATE TABLE "Review" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "projectId" TEXT NOT NULL,
-    "message" TEXT NOT NULL
+    "message" TEXT NOT NULL,
+
+    CONSTRAINT "Review_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -69,22 +80,16 @@ CREATE TABLE "Reply" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "User_id_key" ON "User"("id");
-
--- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_password_key" ON "User"("password");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Project_id_key" ON "Project"("id");
+CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Like_id_key" ON "Like"("id");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Review_id_key" ON "Review"("id");
+CREATE UNIQUE INDEX "Project_slug_key" ON "Project"("slug");
 
 -- AddForeignKey
 ALTER TABLE "Project" ADD CONSTRAINT "Project_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
