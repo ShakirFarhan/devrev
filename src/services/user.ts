@@ -4,6 +4,7 @@ import throwCustomError, {
   ErrorTypes,
   catchErrorHandler,
 } from '../utils/error-handler';
+import * as Config from '../config/index';
 import {
   CreateUserPayload,
   GitHubUserPayload,
@@ -16,7 +17,7 @@ import qs from 'qs';
 import axios from 'axios';
 import { generateUsername, sendMail } from '../utils/helpers';
 import { OAuth2Client } from 'google-auth-library';
-const JWT_SECRET = process.env.JWT_SECRET as unknown as string;
+const JWT_SECRET = Config.JWT_SECRET as unknown as string;
 
 class UserService {
   public static userByUsername(username: string) {
@@ -262,8 +263,8 @@ class UserService {
   private static async getGithubOAuthToken(code: string) {
     const rootUrl = 'https://github.com/login/oauth/access_token';
     const options = {
-      client_id: process.env.GITHUB_CLIENT_ID as unknown as string,
-      client_secret: process.env.GITHUB_CLIENT_SECRET as unknown as string,
+      client_id: Config.GITHUB_CLIENT_ID as unknown as string,
+      client_secret: Config.GITHUB_CLIENT_SECRET as unknown as string,
       code,
     };
     const query = qs.stringify(options);
@@ -354,10 +355,10 @@ class UserService {
   // Google OAuth/Authentication
   public static async googleOAuth(id_token: string) {
     try {
-      const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+      const client = new OAuth2Client(Config.GOOGLE_CLIENT_ID);
       const verify: any = await client.verifyIdToken({
         idToken: id_token,
-        audience: process.env.GOOGLE_CLIENT_ID,
+        audience: Config.GOOGLE_CLIENT_ID,
       });
 
       const { name, verified_email, email, picture } = verify.getPayload();
