@@ -75,3 +75,10 @@ export interface ReplyPayload {
   parentId: string;
   reviewId: string;
 }
+
+export interface MessagePayload {
+  message?: string;
+  file?: string;
+  chatId: string;
+}
+export interface ChatPayload {}

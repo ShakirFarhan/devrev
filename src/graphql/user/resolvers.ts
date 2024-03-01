@@ -1,5 +1,8 @@
 import UserService from '../../services/user';
 import { CreateUserPayload, searchUserPayload } from '../../utils/types';
+import { isUserAuthenticated } from '../../utils/helpers';
+import { GraphQLUpload } from 'graphql-upload-minimal';
+// import { GraphQLUpload } from 'graphql-upload';
 const queries = {
   getUser: async (_: any, payload: { userId: string }) => {
     const res = await UserService.getUser(payload.userId);
@@ -41,6 +44,11 @@ const mutations = {
       payload.newPassword,
       context.user
     );
+  },
+
+  uploadFile: async (_: any, payload: any, context: any) => {
+    console.log(payload.file);
+    return UserService.uploadFile(payload);
   },
 };
 export const resolvers = { queries, mutations };
