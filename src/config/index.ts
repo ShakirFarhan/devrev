@@ -19,4 +19,8 @@ export const {
   REDIS_PORT,
   REDIS_USERNAME,
   REDIS_PASSWORD,
+  KAFKA_HOST,
+  KAFKA_PORT,
+  KAFKA_USERNAME,
+  KAFKA_PASSWORD,
 } = process.env;
