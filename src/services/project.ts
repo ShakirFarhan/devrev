@@ -346,6 +346,12 @@ class ProjectService {
     }
   }
   public static async projectCodeFromGithub(githubUrl: string, user: User) {}
+  public static async likeUnlikeProject() {
+    // action - either like or unlike
+  }
+  public static async likes() {
+    // list of user who liked
+  }
 }
 
 export default ProjectService;
