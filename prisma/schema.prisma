@@ -49,9 +49,13 @@ model User{
   replies Reply[]
   reviews_given Review[]
   project_liked  Like[] 
+  chat Chat[] @relation("participants")
+  chats_admin Chat[] @relation("admins")
+
+  sent_messages Message[] @relation("sentMessages") 
+  // received_messages Message[] @relation("receivedMessages")
 
 }
-
 
 model Project{
   id String  @id  @default(uuid())
@@ -98,4 +102,36 @@ model Reply {
   review Review @relation(fields: [reviewId],references: [id],onDelete: Cascade)
   userId String
   user User @relation(fields: [userId],references: [id])
+}
+
+enum ChatTypes{
+  private
+  group
+  channel
+}
+model Chat{
+  id String @id @default(uuid())
+  type ChatTypes 
+  name String?
+  photo String?
+  participants User[] @relation("participants") 
+  messages Message[] @relation("chatMessages")
+  latestMessageId String?
+  latestMessage   Message?  @relation("latestMessage", fields: [latestMessageId], references: [id])
+  admins User[] @relation("admins")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+}
+model Message{
+  id String @id @default(uuid())
+  message String?
+  file String?
+  senderId String
+  sender User @relation("sentMessages",fields: [senderId],references: [id])
+  chatId String 
+  chat Chat @relation("chatMessages",fields: [chatId],references: [id])
+  latestMessageChat Chat[] @relation("latestMessage")
+  createdAt DateTime  @default(now()) @map("created_at")
+  // recipientId String
+  // recipient User @relation("receivedMessages",fields: [recipientId],references: [id])
 }

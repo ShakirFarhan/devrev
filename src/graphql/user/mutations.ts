@@ -6,4 +6,5 @@ export const mutations = `#graphql
   googleOAuth(tokenId:String!):AuthPayload
   githubOAuth(code:String!):AuthPayload
   changePassword(oldPassword:String!,newPassword:String!):String
+  uploadFile(file:Upload!):String!
 `;
