@@ -4,7 +4,12 @@ import throwCustomError, {
   ErrorTypes,
   catchErrorHandler,
 } from '../utils/error-handler';
-import * as Config from '../config/index';
+import {
+  JWT_SECRET,
+  GITHUB_CLIENT_ID,
+  GITHUB_CLIENT_SECRET,
+  GOOGLE_CLIENT_ID,
+} from '../config/index';
 import {
   CreateUserPayload,
   GitHubUserPayload,
@@ -18,7 +23,7 @@ import axios from 'axios';
 import { generateUsername, sendMail } from '../utils/helpers';
 import { OAuth2Client } from 'google-auth-library';
 import { finished } from 'stream/promises';
-const JWT_SECRET = Config.JWT_SECRET as unknown as string;
+const JWTSECRET = JWT_SECRET as unknown as string;
 
 class UserService {
   public static userByUsername(username: string) {
@@ -91,7 +96,7 @@ class UserService {
     payload: { id: string; email: string },
     expiresIn?: string
   ) {
-    return JWT.sign(payload, JWT_SECRET, {
+    return JWT.sign(payload, JWTSECRET, {
       expiresIn,
     });
   }
@@ -156,7 +161,7 @@ class UserService {
     }
   }
   private static decodeToken(token: string) {
-    return JWT.verify(token, JWT_SECRET);
+    return JWT.verify(token, JWTSECRET);
   }
   // User comfirmation using Token sent to Registered User's email.
   public static async confirmEmail(token: string) {
@@ -264,8 +269,8 @@ class UserService {
   private static async getGithubOAuthToken(code: string) {
     const rootUrl = 'https://github.com/login/oauth/access_token';
     const options = {
-      client_id: Config.GITHUB_CLIENT_ID as unknown as string,
-      client_secret: Config.GITHUB_CLIENT_SECRET as unknown as string,
+      client_id: GITHUB_CLIENT_ID as unknown as string,
+      client_secret: GITHUB_CLIENT_SECRET as unknown as string,
       code,
     };
     const query = qs.stringify(options);
@@ -356,10 +361,10 @@ class UserService {
   // Google OAuth/Authentication
   public static async googleOAuth(id_token: string) {
     try {
-      const client = new OAuth2Client(Config.GOOGLE_CLIENT_ID);
+      const client = new OAuth2Client(GOOGLE_CLIENT_ID);
       const verify: any = await client.verifyIdToken({
         idToken: id_token,
-        audience: Config.GOOGLE_CLIENT_ID,
+        audience: GOOGLE_CLIENT_ID,
       });
 
       const { name, verified_email, email, picture } = verify.getPayload();
