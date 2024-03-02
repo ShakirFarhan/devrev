@@ -101,13 +101,13 @@ class ChatService {
   }
   public static blockUnblockChat() {}
   // Messages
-  public static async sendMessage(payload: MessagePayload, user: User) {
+  public static async sendMessage(payload: MessagePayload) {
     try {
       const newMessage = await prismaClient.message.create({
         data: {
           message: payload.message,
           chatId: payload.chatId,
-          senderId: user.id,
+          senderId: payload.userId,
         },
       });
       if (!newMessage)

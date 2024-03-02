@@ -80,5 +80,6 @@ export interface MessagePayload {
   message?: string;
   file?: string;
   chatId: string;
+  userId: string;
 }
 export interface ChatPayload {}
