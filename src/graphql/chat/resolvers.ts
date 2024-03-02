@@ -1,6 +1,6 @@
 import ChatService from '../../services/chat';
 import { isUserAuthenticated } from '../../utils/helpers';
-import { ChatPayload, MessagePayload } from '../../utils/types';
+import { MessagePayload } from '../../utils/types';
 
 const queries = {
   fetchChats: isUserAuthenticated(

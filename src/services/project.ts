@@ -1,4 +1,5 @@
 import {
+  NotificationPayload,
   ProjectPayload,
   Projects,
   ReplyPayload,
@@ -12,6 +13,7 @@ import throwCustomError, {
 import slugify from 'slugify';
 import { prismaClient } from '../lib/db';
 import { checkProjectExists } from '../utils/helpers';
+import NotificationService from './notifications';
 class ProjectService {
   public static async projects(payload: Projects) {
     const { limit = 10, page, name, tags } = payload;
@@ -238,7 +240,25 @@ class ProjectService {
           message: review.message,
           ratings: review.ratings,
         },
+        include: {
+          project: {
+            include: {
+              owner: true,
+            },
+          },
+          user: true,
+        },
       });
+
+      let notification: NotificationPayload = {
+        recipientId: newReview.project.ownerId,
+        senderId: user.id,
+        content: `${user.username + ' reviewed your Project.'}`,
+        type: 'review',
+      };
+      if (user.id !== notification.recipientId) {
+        await NotificationService.sendNotification(notification);
+      }
       return newReview;
     } catch (error) {
       throw catchErrorHandler(error);
@@ -295,7 +315,9 @@ class ProjectService {
       });
       if (!newReply)
         return throwCustomError('Unable to add Reply', ErrorTypes.BAD_REQUEST);
-
+      // await NotificationService.sendNotification({
+      //   recipientId:
+      // })
       return newReply;
     } catch (error) {
       throw catchErrorHandler(error);

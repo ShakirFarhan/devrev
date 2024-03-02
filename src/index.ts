@@ -14,7 +14,6 @@ async function init() {
   const app = express();
   const server = http.createServer(app);
   const PORT = Config.PORT || 8000;
-
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
   app.use(graphqlUploadExpress());
@@ -34,6 +33,7 @@ async function init() {
 
   socketService.io.attach(server);
   socketService.initListeners();
+
   server.listen(PORT, () => {
     console.log(`Server listening at PORT-${PORT}`);
   });

@@ -82,4 +82,25 @@ export interface MessagePayload {
   chatId: string;
   userId: string;
 }
-export interface ChatPayload {}
+export interface NotificationPayload {
+  senderId?: string;
+  recipientId: string;
+  type: 'like' | 'reply' | 'message' | 'review';
+  content: string;
+  status?: 'seen' | 'unseen';
+}
+export interface EmitNotificationPayload {
+  sender: {
+    id: string;
+    fullName: string;
+    profilePhoto: string;
+  };
+  recipient: {
+    id: string;
+
+    fullName: string;
+    profilePhoto: string;
+  };
+  content: string;
+  type: 'like' | 'reply' | 'message' | 'review';
+}
