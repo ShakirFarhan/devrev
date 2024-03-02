@@ -74,3 +74,5 @@ export const isUserAuthenticated =
         });
     });
   };
+
+export function getNotificationMessage() {}

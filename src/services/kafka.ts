@@ -31,35 +31,44 @@ export async function createProducer() {
   return producer;
 }
 // Manages the message delivery to Kafka
-export async function produceMessage(message: MessagePayload) {
+export async function produceMessage(
+  // This payload can be of different types not just Message related.
+  message: MessagePayload,
+  topic: 'MESSAGES'
+) {
   const producer = await createProducer();
   await producer.send({
     messages: [
       { key: message.userId + Date.now(), value: JSON.stringify(message) },
     ],
-    topic: 'MESSAGES',
+    topic: topic,
   });
   return true;
 }
+
 // Handles the message storage from Kafka to the database
 export async function messageConsumer() {
   const consumer = kafka.consumer({ groupId: 'default' });
   await consumer.connect();
   await consumer.subscribe({ topic: 'MESSAGES', fromBeginning: true });
+  // await consumer.subscribe({ topic: 'NOTIFICATIONS', fromBeginning: true });
   await consumer.run({
     autoCommit: true,
-    eachMessage: async ({ message, pause }) => {
+    eachMessage: async ({ message, pause, topic }) => {
       if (!message.value) return;
-      try {
-        // Storing Messages in DB
-        let data = JSON.parse(message.value.toString()) as MessagePayload;
-        await ChatService.sendMessage(data);
-      } catch (error) {
-        // Delays the consumer's activity in case of an error
-        pause();
-        setTimeout(() => {
-          consumer.resume([{ topic: 'MESSAGES' }]);
-        }, 60 * 1000);
+      // Handling Chat Related Data
+      if (topic === 'MESSAGES') {
+        try {
+          // Storing Messages in DB
+          let data = JSON.parse(message.value.toString()) as MessagePayload;
+          await ChatService.sendMessage(data);
+        } catch (error) {
+          // Delays the consumer's activity in case of an error
+          pause();
+          setTimeout(() => {
+            consumer.resume([{ topic: 'MESSAGES' }]);
+          }, 60 * 1000);
+        }
       }
     },
   });

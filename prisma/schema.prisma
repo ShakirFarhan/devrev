@@ -51,8 +51,10 @@ model User{
   project_liked  Like[] 
   chat Chat[] @relation("participants")
   chats_admin Chat[] @relation("admins")
-
   sent_messages Message[] @relation("sentMessages") 
+  sent_notifications Notification[] @relation("sentNotifications")
+  received_notifications Notification[] @relation("receivedNotifications")
+
   // received_messages Message[] @relation("receivedMessages")
 
 }
@@ -134,4 +136,26 @@ model Message{
   createdAt DateTime  @default(now()) @map("created_at")
   // recipientId String
   // recipient User @relation("receivedMessages",fields: [recipientId],references: [id])
+}
+
+enum NotificationType{
+  like
+  reply
+  message
+  review
+}
+enum NotificationStatus{
+  seen
+  unseen
+}
+model Notification{
+  id String @id @default(uuid())
+  senderId String? @map("sender_id")
+  sender User? @relation("sentNotifications",fields: [senderId],references: [id])
+  recipientId String @map("recipient_id")
+  recipient User @relation("receivedNotifications",fields: [recipientId],references: [id])
+  type NotificationType 
+  content String
+  status NotificationStatus @default(seen)
+  createdAt DateTime @default(now()) @map("created_at")
 }
