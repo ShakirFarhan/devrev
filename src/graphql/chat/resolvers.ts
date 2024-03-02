@@ -23,11 +23,9 @@ const mutations = {
   ),
 
   // Messages
-  sendMessage: isUserAuthenticated(
-    async (_: any, payload: MessagePayload, context: any) => {
-      return await ChatService.sendMessage(payload, context.user);
-    }
-  ),
+  sendMessage: isUserAuthenticated(async (_: any, payload: MessagePayload) => {
+    return await ChatService.sendMessage(payload);
+  }),
   deleteMessage: isUserAuthenticated(
     async (_: any, payload: { messageId: string }, context: any) => {
       return await ChatService.deleteMessage(payload.messageId, context.user);

@@ -7,6 +7,8 @@ import {
 } from '../config';
 import path from 'path';
 import fs from 'fs';
+import ChatService from './chat';
+import { MessagePayload } from '../utils/types';
 let producer: null | Producer;
 // Kafka Setup
 const kafka = new Kafka({
@@ -26,14 +28,15 @@ export async function createProducer() {
   const _producer = kafka.producer();
   await _producer.connect();
   producer = _producer;
-  console.log('Producer Created.');
   return producer;
 }
 // Manages the message delivery to Kafka
-export async function produceMessage(message: string) {
+export async function produceMessage(message: MessagePayload) {
   const producer = await createProducer();
   await producer.send({
-    messages: [{ key: message + Date.now(), value: message }],
+    messages: [
+      { key: message.userId + Date.now(), value: JSON.stringify(message) },
+    ],
     topic: 'MESSAGES',
   });
   return true;
@@ -48,7 +51,9 @@ export async function messageConsumer() {
     eachMessage: async ({ message, pause }) => {
       if (!message.value) return;
       try {
-        // Store Messags in the database
+        // Storing Messages in DB
+        let data = JSON.parse(message.value.toString()) as MessagePayload;
+        await ChatService.sendMessage(data);
       } catch (error) {
         // Delays the consumer's activity in case of an error
         pause();
