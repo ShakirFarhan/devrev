@@ -3,4 +3,5 @@ export const queries = `#graphql
  projectBySlug(projectSlug:String!,ownerId:String!):Project
  projectById(projectId:String!):Project
  projectReviews(projectId:String!):[Review]
+ projectLikes(projectId:String!):[Like]
 `;

@@ -301,23 +301,39 @@ class ProjectService {
   }
   public static async addReply(reply: ReplyPayload, user: User) {
     try {
+      console.log(reply);
       const newReply = await prismaClient.reply.create({
         data: {
           message: reply.message,
           reviewId: reply.reviewId,
           parentId: reply.parentId,
+          projectId: reply.projectId,
           userId: user.id,
         },
         include: {
           review: true,
           parent: true,
+          project: {
+            select: {
+              name: true,
+              ownerId: true,
+            },
+          },
         },
       });
       if (!newReply)
         return throwCustomError('Unable to add Reply', ErrorTypes.BAD_REQUEST);
-      // await NotificationService.sendNotification({
-      //   recipientId:
-      // })
+
+      let sendTo = [newReply.project.ownerId] as string[];
+      if (newReply.parent?.userId) {
+        sendTo.push(newReply.parent?.userId);
+      }
+      await NotificationService.handleNotifications(
+        sendTo,
+        user,
+        'reply',
+        newReply.project.name
+      );
       return newReply;
     } catch (error) {
       throw catchErrorHandler(error);
@@ -368,11 +384,76 @@ class ProjectService {
     }
   }
   public static async projectCodeFromGithub(githubUrl: string, user: User) {}
-  public static async likeUnlikeProject() {
-    // action - either like or unlike
+
+  public static async likeProject(projectId: string, user: User) {
+    try {
+      const likeExists = await prismaClient.like.findFirst({
+        where: {
+          userId: user.id,
+          projectId,
+        },
+      });
+      if (likeExists) return false;
+      const like = await prismaClient.like.create({
+        data: {
+          projectId,
+          userId: user.id,
+        },
+        include: {
+          project: {
+            select: {
+              ownerId: true,
+              name: true,
+            },
+          },
+        },
+      });
+      let sendTo = [like.project.ownerId] as string[];
+      await NotificationService.handleNotifications(
+        sendTo,
+        user,
+        'like',
+        like.project.name
+      );
+      return true;
+    } catch (error) {
+      throw catchErrorHandler(error);
+    }
   }
-  public static async likes() {
-    // list of user who liked
+  public static async unlikeProject(projectId: string, user: User) {
+    try {
+      const likeExists = await prismaClient.like.findFirst({
+        where: {
+          userId: user.id,
+          projectId,
+        },
+      });
+      if (!likeExists) return false;
+      await prismaClient.like.delete({
+        where: {
+          id: likeExists.id,
+        },
+      });
+      return true;
+    } catch (error) {
+      throw catchErrorHandler(error);
+    }
+  }
+  public static async likes(projectId: string, user: User) {
+    try {
+      const projects = await prismaClient.like.findMany({
+        where: {
+          projectId,
+        },
+        include: {
+          project: true,
+          user: true,
+        },
+      });
+      return projects;
+    } catch (error) {
+      throw catchErrorHandler(error);
+    }
   }
 }
 

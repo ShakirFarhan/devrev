@@ -75,4 +75,30 @@ export const isUserAuthenticated =
     });
   };
 
-export function getNotificationMessage() {}
+export function generateNotificationMessage(
+  username: string,
+  projectname: string,
+  type: 'like' | 'reply' | 'review' | 'message'
+) {
+  let message = '';
+
+  switch (type) {
+    case 'like':
+      message = `${username} has liked your project ${projectname}.`;
+      break;
+    case 'reply':
+      message = `${username} added a reply in ${projectname}.`;
+      break;
+    case 'message':
+      message = `${username} has sent you a message.".`;
+      break;
+    case 'review':
+      message = `${username} has reviewed your project ${projectname}.`;
+      break;
+    default:
+      message = `You have a new notification regarding your project ${projectname}.`;
+      break;
+  }
+
+  return message;
+}

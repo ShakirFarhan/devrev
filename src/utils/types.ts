@@ -74,6 +74,7 @@ export interface ReplyPayload {
   message: string;
   parentId: string;
   reviewId: string;
+  projectId: string;
 }
 
 export interface MessagePayload {

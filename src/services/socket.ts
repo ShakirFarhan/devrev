@@ -3,6 +3,7 @@ import { pub, sub } from '../lib/redis';
 import { produceMessage } from './kafka';
 import { MessagePayload, EmitNotificationPayload } from '../utils/types';
 import { catchErrorHandler } from '../utils/error-handler';
+
 class SocketService {
   private _io: Server;
   constructor() {
