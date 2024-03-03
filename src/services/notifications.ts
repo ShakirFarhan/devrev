@@ -7,9 +7,11 @@ import throwCustomError, {
 import {
   EmitNotificationPayload,
   NotificationPayload,
+  ProjectPayload,
   User,
 } from '../utils/types';
 import SocketService from './socket';
+import { generateNotificationMessage } from '../utils/helpers';
 class NotificationService {
   private static socketService = new SocketService();
   public static async sendNotification(payload: NotificationPayload) {
@@ -48,7 +50,30 @@ class NotificationService {
       throw catchErrorHandler(error);
     }
   }
-
+  public static async handleNotifications(
+    recipients: string[],
+    currUser: User,
+    type: 'like' | 'reply' | 'message' | 'review',
+    projectName: string
+  ) {
+    const message = generateNotificationMessage(
+      currUser.username,
+      projectName,
+      type
+    );
+    recipients.map(async (recipient) => {
+      let notification: NotificationPayload = {
+        recipientId: recipient as string,
+        senderId: currUser.id,
+        content: message,
+        type: type,
+      };
+      if (currUser.id !== notification.recipientId) {
+        console.log('Notification Sent.');
+        await NotificationService.sendNotification(notification);
+      }
+    });
+  }
   public static async myNotifications(user: User) {
     try {
       const notifications = await prismaClient.notification.findMany({

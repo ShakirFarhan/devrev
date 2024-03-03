@@ -2,6 +2,7 @@ import { prismaClient } from '../lib/db';
 import { ErrorTypes, catchErrorHandler } from '../utils/error-handler';
 import { MessagePayload, User } from '../utils/types';
 import throwCustomError from '../utils/error-handler';
+import NotificationService from './notifications';
 class ChatService {
   // Chats
   public static async fetchChats(user: User) {
@@ -109,9 +110,17 @@ class ChatService {
           chatId: payload.chatId,
           senderId: payload.userId,
         },
+        include: {
+          chat: {
+            select: {
+              participants: true,
+            },
+          },
+        },
       });
       if (!newMessage)
         return throwCustomError('Message not Sent.', ErrorTypes.BAD_REQUEST);
+
       return newMessage;
     } catch (error) {
       throw catchErrorHandler(error);

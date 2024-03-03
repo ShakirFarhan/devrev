@@ -18,7 +18,8 @@ type Reply{
   parent:Reply,
   children:[Reply]
   message:String,
-  review:Review
+  review:Review,
+  project:Project
   user: User
 }
 `;

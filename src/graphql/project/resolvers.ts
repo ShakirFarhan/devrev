@@ -29,6 +29,11 @@ const queries = {
       return await ProjectService.getProjectReviews(payload.projectId);
     }
   ),
+  projectLikes: isUserAuthenticated(
+    async (_: any, payload: { projectId: string }, context: any) => {
+      return await ProjectService.likes(payload.projectId, context.user);
+    }
+  ),
 };
 const mutations = {
   postProject: isUserAuthenticated(
@@ -44,6 +49,19 @@ const mutations = {
   deleteProject: isUserAuthenticated(
     async (_: any, payload: { projectId: string }, context: any) => {
       return await ProjectService.deleteProject(
+        payload.projectId,
+        context.user
+      );
+    }
+  ),
+  likeProject: isUserAuthenticated(
+    async (_: any, payload: { projectId: string }, context: any) => {
+      return await ProjectService.likeProject(payload.projectId, context.user);
+    }
+  ),
+  unlikeProject: isUserAuthenticated(
+    async (_: any, payload: { projectId: string }, context: any) => {
+      return await ProjectService.unlikeProject(
         payload.projectId,
         context.user
       );

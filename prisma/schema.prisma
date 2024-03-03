@@ -73,6 +73,7 @@ model Project{
   githubLink String? @map("github_links")
   likes Like[]
   reviews Review[]
+  replies Reply[]
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   @@index([ownerId,slug])
@@ -104,6 +105,8 @@ model Reply {
   review Review @relation(fields: [reviewId],references: [id],onDelete: Cascade)
   userId String
   user User @relation(fields: [userId],references: [id])
+  projectId String
+  project Project @relation(fields: [projectId],references: [id])
 }
 
 enum ChatTypes{
