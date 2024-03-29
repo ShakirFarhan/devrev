@@ -1,8 +1,8 @@
 import UserService from '../../services/user';
 import { CreateUserPayload, searchUserPayload } from '../../utils/types';
-import { isUserAuthenticated } from '../../utils/helpers';
-import { GraphQLUpload } from 'graphql-upload-minimal';
-// import { GraphQLUpload } from 'graphql-upload';
+// import { isUserAuthenticated } from '../../utils/helpers';
+// import { GraphQLUpload } from 'graphql-upload-minimal';
+// // import { GraphQLUpload } from 'graphql-upload';
 const queries = {
   getUser: async (_: any, payload: { userId: string }) => {
     const res = await UserService.getUser(payload.userId);
@@ -11,11 +11,19 @@ const queries = {
   searchUsers: async (_: any, payload: searchUserPayload) => {
     return await UserService.searchUsers(payload);
   },
+  userByEmail: async (_: any, payload: { email: string }) => {
+    return await UserService.userByEmail(payload.email);
+  },
+  userByUsername: async (_: any, payload: { username: string }) => {
+    return await UserService.userByUsername(payload.username);
+  },
+  isValidUser: async (_: any, payload: { token: string }) => {
+    return await UserService.isValidUser(payload.token);
+  },
 };
 const mutations = {
   createUser: async (_: any, payload: CreateUserPayload) => {
-    const res = await UserService.createUser(payload);
-    return res?.message;
+    return await UserService.createUser(payload);
   },
   confirmEmail: async (_: any, payload: { token: string }) => {
     const { token } = payload;
