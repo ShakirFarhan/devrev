@@ -105,3 +105,17 @@ export interface EmitNotificationPayload {
   content: string;
   type: 'like' | 'reply' | 'message' | 'review';
 }
+
+export interface JWTTokenPayload {
+  id: string;
+  email: string;
+  tokenType?: 'access' | 'verification';
+}
+
+export interface JWTTokenDetails {
+  id: string;
+  email: string;
+  tokenType?: 'access' | 'verification';
+  iat: number;
+  exp: number;
+}

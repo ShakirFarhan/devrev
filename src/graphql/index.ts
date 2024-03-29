@@ -27,13 +27,13 @@ export default async function createApolloGraphQLServer(app: any) {
      ${User.mutations}
      ${Project.mutations}
     ${Chat.mutations}
-
+    testData(data:String!):String
     #  singleUpload(file: Upload!): File!
 
      
     }`,
     resolvers: {
-      Upload: GraphQLUpload,
+      // Upload: GraphQLUpload,
       Query: {
         ...User.resolvers.queries,
         ...Project.resolvers.queries,
@@ -43,6 +43,11 @@ export default async function createApolloGraphQLServer(app: any) {
         ...User.resolvers.mutations,
         ...Project.resolvers.mutations,
         ...Chat.resolvers.mutations,
+        testData: (_: any, payload: any) => {
+          console.log('payload');
+          console.log(payload);
+          return payload.data;
+        },
 
         // singleUpload: async (parent, { file }) => {
         //   console.log('here');

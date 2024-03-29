@@ -10,5 +10,4 @@ deleteReview(reviewId:String!):Review
 addReply(reviewId:String!,parentId:String,message:String!,projectId:String!):Reply
 updateReply(replyId:String!,message:String!):Reply
 deleteReply(replyId:String!):Reply
-
 `;

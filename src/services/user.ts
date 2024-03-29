@@ -13,6 +13,8 @@ import {
 import {
   CreateUserPayload,
   GitHubUserPayload,
+  JWTTokenDetails,
+  JWTTokenPayload,
   LoginUserPayload,
   User,
   searchUserPayload,
@@ -92,10 +94,7 @@ class UserService {
     }
   }
   // User-Auth Related Code
-  private static generateToken(
-    payload: { id: string; email: string },
-    expiresIn?: string
-  ) {
+  private static generateToken(payload: JWTTokenPayload, expiresIn?: string) {
     return JWT.sign(payload, JWTSECRET, {
       expiresIn,
     });
@@ -144,31 +143,64 @@ class UserService {
           fullName,
         },
       });
-
-      const payload = {
-        id: user.id,
-        email: user.email,
-      };
-      let token = this.generateToken(payload, '1h');
+      let token = this.generateToken(
+        { id: user.id, email: user.email, tokenType: 'verification' },
+        '10m'
+      );
       await sendMail(user.email, token);
       return {
-        user: payload,
-        message:
-          'User registered successfully. Please check your email for confirmation.',
+        email: user.email,
       };
     } catch (error: any) {
+      console.log(error);
       throw catchErrorHandler(error);
     }
   }
   private static decodeToken(token: string) {
-    return JWT.verify(token, JWTSECRET);
+    try {
+      return JWT.verify(token, JWTSECRET);
+    } catch (error) {
+      console.log('Error is here');
+      console.log(error);
+      throwCustomError('JWT Expired', ErrorTypes.BAD_REQUEST);
+    }
+  }
+  public static async isValidUser(token: string) {
+    try {
+      if (!token) return;
+      const payload = UserService.decodeToken(token) as JWTTokenDetails;
+
+      if (payload.tokenType === 'verification') {
+        return throwCustomError(
+          'Invalid access token.',
+          ErrorTypes.BAD_REQUEST
+        );
+      }
+      const user = await prismaClient.user.findUnique({
+        where: {
+          id: payload.id,
+        },
+        select: {
+          email: true,
+          provider: true,
+          role: true,
+          username: true,
+        },
+      });
+      return user;
+      return {};
+    } catch (error) {
+      console.log(error);
+      throwCustomError('JWT Expired', ErrorTypes.BAD_REQUEST);
+    }
   }
   // User comfirmation using Token sent to Registered User's email.
   public static async confirmEmail(token: string) {
     try {
       const decodeToken: any = UserService.decodeToken(token);
-      if (!decodeToken) {
-        return throwCustomError('Invalid Token', ErrorTypes.UNAUTHENTICATED);
+
+      if (!decodeToken || decodeToken.tokenType !== 'verification') {
+        return throwCustomError('Invalid Token', ErrorTypes.BAD_USER_INPUT);
       }
 
       const updatedUser = await prismaClient.user.update({
@@ -236,7 +268,7 @@ class UserService {
           id: user.id,
           email: user.email,
         };
-        let token = UserService.generateToken(payload, '1h');
+        let token = UserService.generateToken(payload, '1d');
         await sendMail(user.email, token);
         return {
           user: {},
@@ -281,6 +313,8 @@ class UserService {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
       });
+      console.log('data');
+      console.log(data);
       const decoded = qs.parse(data) as { access_token: string };
 
       return decoded;
@@ -316,9 +350,10 @@ class UserService {
       )) as {
         access_token: string;
       };
+      console.log('here');
       const { email, avatar_url, login, name } =
         (await UserService.getGithubUser(access_token)) as GitHubUserPayload;
-
+      console.log(email);
       const user = await prismaClient.user.upsert({
         where: {
           email,
@@ -441,7 +476,6 @@ class UserService {
         ErrorTypes.BAD_USER_INPUT
       );
     }
-    console.log('here');
     if (!oldPassword || oldPassword.length < 8) {
       return throwCustomError(
         'Invalid Old Password',

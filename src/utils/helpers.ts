@@ -19,7 +19,7 @@ export const sendMail = async (email: string, token: string) => {
       subject: 'Confirm Your Email Address',
       text: `
       <p>Thank you for registering! Please click the following link to confirm your email:</p>
-      <a href="https://gradgigs.com/confirm-email?token=${token}">Confirm Email</a>
+      <a href="${process.env.CLIENT_URL}/confirm-email?code=${token}">Confirm Email</a>
     `,
     });
   } catch (error) {
