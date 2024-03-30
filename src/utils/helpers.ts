@@ -27,22 +27,45 @@ export const sendMail = async (email: string, token: string) => {
   }
 };
 
-export function generateUsername(fullName?: string): string {
+export async function generateUsername(fullName?: string) {
+  var username = '';
   if (!fullName) {
-    const randomUsername = Math.random().toString(36).substring(7);
-    return `${randomUsername}`;
+    username = Math.random().toString(36).substring(7);
+    return username;
   }
-
+  let attempts = 0;
+  const maxAttempts = 5; // Define a maximum number of attempts
   // Remove spaces from the full name
-  const sanitizedFullName = fullName.replace(/\s/g, '');
+  // const sanitizedFullName = fullName.replace(/\s/g, '');
 
-  // Add 1-2 random digits to the end
-  const randomDigits = Math.floor(Math.random() * 90) + 10;
+  // // Add 1-2 random digits to the end
+  // const randomDigits = Math.floor(Math.random() * 90) + 10;
 
-  // Combine the modified name with random digits
-  const finalUsername = `${sanitizedFullName}${randomDigits}`;
+  // // Combine the modified name with random digits
+  // const finalUsername = `${sanitizedFullName}${randomDigits}`;
+  while (attempts < maxAttempts) {
+    // Remove special characters and spaces, and convert to lowercase
+    const sanitizedFullName = fullName.replace(/\s/g, '').toLowerCase();
+    const randomDigits = Math.floor(Math.random() * 90) + 10;
+    const potentialUsername =
+      attempts === 0
+        ? sanitizedFullName
+        : `${sanitizedFullName}${randomDigits}`;
 
-  return finalUsername;
+    const isUsernameTaken = await prismaClient.user.findFirst({
+      where: {
+        username: potentialUsername,
+      },
+    });
+
+    if (!isUsernameTaken) {
+      username = potentialUsername; // Return the unique username
+      return username;
+    }
+
+    attempts++;
+  }
+  return username;
 }
 
 export async function checkProjectExists(projectName: string, userId: string) {
