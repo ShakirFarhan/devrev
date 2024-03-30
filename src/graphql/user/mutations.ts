@@ -3,7 +3,7 @@ export const mutations = `#graphql
   testing:String
   confirmEmail(token:String!):AuthPayload
   loginUser(email:String!,password:String!):AuthPayload
-  googleOAuth(tokenId:String!):AuthPayload
+  googleOAuth(tokenId:String!,tokenType:String!):AuthPayload
   githubOAuth(code:String!):AuthPayload
   changePassword(oldPassword:String!,newPassword:String!):String
   uploadFile(file:Upload!):String!

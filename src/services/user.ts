@@ -9,6 +9,7 @@ import {
   GITHUB_CLIENT_ID,
   GITHUB_CLIENT_SECRET,
   GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET,
 } from '../config/index';
 import {
   CreateUserPayload,
@@ -160,7 +161,6 @@ class UserService {
     try {
       return JWT.verify(token, JWTSECRET);
     } catch (error) {
-      console.log('Error is here');
       console.log(error);
       throwCustomError('JWT Expired', ErrorTypes.BAD_REQUEST);
     }
@@ -313,8 +313,7 @@ class UserService {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
       });
-      console.log('data');
-      console.log(data);
+
       const decoded = qs.parse(data) as { access_token: string };
 
       return decoded;
@@ -350,36 +349,31 @@ class UserService {
       )) as {
         access_token: string;
       };
-      console.log('here');
+
       const { email, avatar_url, login, name } =
         (await UserService.getGithubUser(access_token)) as GitHubUserPayload;
-      console.log(email);
-      const user = await prismaClient.user.upsert({
+      const userExists = await prismaClient.user.findFirst({
         where: {
           email,
         },
-        create: {
-          username: login,
-          githubUsername: login,
-          email,
-          fullName: name,
-          verified: true,
-          password: randomUUID(),
-          provider: 'github',
-          profilePhoto: avatar_url,
-        },
-        update: {
-          username: login,
-          email,
-          profilePhoto: avatar_url,
-          provider: 'github',
-        },
       });
-      if (!user)
-        return throwCustomError(
-          'Failed to Authecticate',
-          ErrorTypes.BAD_REQUEST
-        );
+      let user: typeof userExists;
+      if (!userExists) {
+        user = await prismaClient.user.create({
+          data: {
+            username: login.toLowerCase(),
+            githubUsername: login,
+            email,
+            fullName: name,
+            verified: true,
+            password: randomUUID(),
+            provider: 'github',
+            profilePhoto: avatar_url,
+          },
+        });
+      } else {
+        user = userExists;
+      }
 
       const token = UserService.generateToken(
         { id: user.id, email: user.email },
@@ -390,40 +384,77 @@ class UserService {
         user,
       };
     } catch (error: any) {
+      console.log(error);
       throw catchErrorHandler(error);
     }
   }
   // Google OAuth/Authentication
-  public static async googleOAuth(id_token: string) {
+  public static async googleOAuth(
+    id_token: string,
+    tokenType: 'code' | 'credential'
+  ) {
     try {
-      const client = new OAuth2Client(GOOGLE_CLIENT_ID);
+      let authToken;
+      if (tokenType === 'code') {
+        const { data } = await axios.post(
+          'https://oauth2.googleapis.com/token',
+          {
+            code: id_token,
+            client_id: GOOGLE_CLIENT_ID,
+            client_secret: GOOGLE_CLIENT_SECRET,
+            redirect_uri: 'http://localhost:3000', // Must match the redirect URI configured in Google Developer Console
+            grant_type: 'authorization_code',
+          }
+        );
+        if (!data.id_token)
+          return throwCustomError(
+            'Something went wrong. Try Again',
+            ErrorTypes.BAD_REQUEST
+          );
+        authToken = data.id_token;
+      } else {
+        authToken = id_token;
+      }
+      const client = new OAuth2Client({
+        clientId: GOOGLE_CLIENT_ID,
+        clientSecret: GOOGLE_CLIENT_SECRET,
+      });
       const verify: any = await client.verifyIdToken({
-        idToken: id_token,
+        idToken: authToken,
         audience: GOOGLE_CLIENT_ID,
       });
-
-      const { name, verified_email, email, picture } = verify.getPayload();
-      if (!verified_email)
+      const {
+        given_name: firstName,
+        family_name: lastName,
+        email_verified,
+        name,
+        email,
+        picture,
+      } = verify.getPayload();
+      if (!email_verified)
         return throwCustomError('Email Not Verified', ErrorTypes.BAD_REQUEST);
-      const username = generateUsername(name);
-      const user = await prismaClient.user.upsert({
-        where: { email },
-        create: {
-          username,
+      const userExists = await prismaClient.user.findUnique({
+        where: {
           email,
-          profilePhoto: picture,
-          password: randomUUID(),
-          verified: true,
-          provider: 'google',
         },
-        update: { username, email, profilePhoto: picture, provider: 'google' },
       });
-      if (!user)
-        return throwCustomError(
-          'Failed to Authecticate',
-          ErrorTypes.BAD_REQUEST
-        );
-
+      let user: typeof userExists;
+      if (!userExists) {
+        const username = (await generateUsername(name)) as string;
+        user = await prismaClient.user.create({
+          data: {
+            username,
+            email,
+            fullName: name,
+            profilePhoto: picture,
+            password: randomUUID(),
+            verified: true,
+            provider: 'google',
+          },
+        });
+      } else {
+        user = userExists;
+      }
       const token = UserService.generateToken(
         { id: user.id, email: user.email },
         '10d'
@@ -433,6 +464,7 @@ class UserService {
         user,
       };
     } catch (error: any) {
+      console.log(error);
       throw catchErrorHandler(error);
     }
   }
@@ -512,8 +544,6 @@ class UserService {
     return 'Password Changed Successfully';
   }
   public static async uploadFile(file: any) {
-    console.log('Hello');
-    console.log(file);
     const { createReadStream, filename, mimetype, encoding } = await file;
 
     // Invoking the `createReadStream` will return a Readable Stream.

@@ -38,8 +38,14 @@ const mutations = {
     const res = await UserService.githubOAuth(payload.code);
     return res;
   },
-  googleOAuth: async (_: any, payload: { token_id: string }) => {
-    const res = await UserService.googleOAuth(payload.token_id);
+  googleOAuth: async (
+    _: any,
+    payload: { tokenId: string; tokenType: 'code' | 'credential' }
+  ) => {
+    const res = await UserService.googleOAuth(
+      payload.tokenId,
+      payload.tokenType
+    );
     return res;
   },
   changePassword: async (
