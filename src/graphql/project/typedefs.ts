@@ -1,5 +1,19 @@
 export const typeDefs = `#graphql
-
+type Project {
+  id:ID,
+  name:String,
+  description:String,
+  tags:[String],
+  owner:User,
+  link:String,
+  demo:String,
+  githubLink:String,
+  isForSale:Boolean,
+  price:Int,
+  level:String,
+  technologies:[String]
+  reviews:[Review]
+}
 type SearchProjectsResult{
   projects:[Project],
   page:Int,

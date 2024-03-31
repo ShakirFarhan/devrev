@@ -1,3 +1,5 @@
+import { ReadStream } from 'fs';
+
 export interface CreateUserPayload {
   email: string;
   password: string;
@@ -54,7 +56,11 @@ export interface ProjectPayload {
   tags: string[];
   link: string;
   demo?: string;
+  technologies: string[];
   githubLink?: string;
+  isForSale?: boolean;
+  price?: number;
+  level?: 'beginner' | 'advanced' | 'intermediate';
 }
 export interface Projects {
   limit: number;
@@ -118,4 +124,15 @@ export interface JWTTokenDetails {
   tokenType?: 'access' | 'verification';
   iat: number;
   exp: number;
+}
+export interface FileUpload {
+  fieldName: string;
+  filename: string;
+  mimetype: string;
+  encoding: string;
+  createReadStream: () => ReadStream;
+}
+
+export interface SingleUploadPayload {
+  file: Promise<FileUpload>;
 }

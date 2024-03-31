@@ -26,19 +26,13 @@ type User {
   created_at:Int,
   updated_at:Int,
   reviews_given:[Review],
-  project_liked:[Like]
+  project_liked:[Like],
+  followers: [Follow],
+  following: [Follow]
 }
-type Project {
-  id:ID,
-  name:String,
-  description:String,
-  tags:[String],
-  owner:User,
-  link:String,
-  demo:String,
-  githubLink:String,
-  reviews:[Review]
-
+type Follow{
+  follower:User,
+  following:User
 }
 type Review{
   id:ID,
@@ -75,5 +69,11 @@ type SearchUsersResult{
   users:[User],
   page:Int,
   totalPages:Int
+}
+scalar Upload 
+type File {
+  filename: String!
+  mimetype: String!
+  encoding: String!
 }
 `;

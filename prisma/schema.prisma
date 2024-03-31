@@ -49,16 +49,29 @@ model User{
   replies Reply[]
   reviews_given Review[]
   project_liked  Like[] 
+  followers Follows[] @relation("following")
+  following Follows[] @relation("follower")
   chat Chat[] @relation("participants")
   chats_admin Chat[] @relation("admins")
   sent_messages Message[] @relation("sentMessages") 
   sent_notifications Notification[] @relation("sentNotifications")
   received_notifications Notification[] @relation("receivedNotifications")
-
   // received_messages Message[] @relation("receivedMessages")
-
 }
+model Follows {
+  id String @id @default(uuid())
+  follower    User @relation("follower", fields: [followerId], references: [id])
+  followerId  String
 
+  following   User @relation("following", fields: [followingId], references: [id])
+  followingId String
+  @@index([followerId, followingId])
+}
+enum ProjectLevel{
+  beginner
+  intermediate 
+  advanced
+}
 model Project{
   id String  @id  @default(uuid())
   name String
@@ -71,6 +84,11 @@ model Project{
   link String @map("hosted_link")
   demo String? 
   githubLink String? @map("github_links")
+  isForSale Boolean @default(false) @map("is_for_sale")
+  technologies String[]
+  price Int? 
+  verified Boolean?
+  level ProjectLevel?
   likes Like[]
   reviews Review[]
   replies Reply[]

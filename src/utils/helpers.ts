@@ -1,6 +1,8 @@
 import nodemailer from 'nodemailer';
 import { prismaClient } from '../lib/db';
 import * as Config from '../config/index';
+import { GraphQLUpload } from 'graphql-upload-minimal';
+
 export const sendMail = async (email: string, token: string) => {
   try {
     const transport = nodemailer.createTransport({
@@ -34,17 +36,8 @@ export async function generateUsername(fullName?: string) {
     return username;
   }
   let attempts = 0;
-  const maxAttempts = 5; // Define a maximum number of attempts
-  // Remove spaces from the full name
-  // const sanitizedFullName = fullName.replace(/\s/g, '');
-
-  // // Add 1-2 random digits to the end
-  // const randomDigits = Math.floor(Math.random() * 90) + 10;
-
-  // // Combine the modified name with random digits
-  // const finalUsername = `${sanitizedFullName}${randomDigits}`;
+  const maxAttempts = 5;
   while (attempts < maxAttempts) {
-    // Remove special characters and spaces, and convert to lowercase
     const sanitizedFullName = fullName.replace(/\s/g, '').toLowerCase();
     const randomDigits = Math.floor(Math.random() * 90) + 10;
     const potentialUsername =
@@ -59,7 +52,7 @@ export async function generateUsername(fullName?: string) {
     });
 
     if (!isUsernameTaken) {
-      username = potentialUsername; // Return the unique username
+      username = potentialUsername;
       return username;
     }
 
@@ -125,3 +118,12 @@ export function generateNotificationMessage(
 
   return message;
 }
+// export const uploadFile = async (file: any, key: string) => {
+//   const { createReadStream, filename, mimetype, encoding } = await file;
+//   const stream = createReadStream();
+//   const out = require('fs').createWriteStream('local-file-output.txt');
+//   stream.pipe(out);
+//   await finished(out);
+
+//   return { filename, mimetype, encoding };
+// };

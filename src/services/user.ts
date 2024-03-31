@@ -51,6 +51,18 @@ class UserService {
         },
         include: {
           projects: true,
+          followers: {
+            include: {
+              follower: true,
+              following: true,
+            },
+          },
+          following: {
+            include: {
+              follower: true,
+              following: true,
+            },
+          },
         },
       });
 
@@ -247,6 +259,7 @@ class UserService {
       if (!user) {
         return throwCustomError('User not Found.', ErrorTypes.NOT_FOUND);
       }
+
       // User registered with Google & Github cannot login manually
       if (user?.provider !== 'local') {
         return throwCustomError(
@@ -289,6 +302,7 @@ class UserService {
         },
         '10d'
       );
+
       return {
         token,
         user,
@@ -543,20 +557,70 @@ class UserService {
     });
     return 'Password Changed Successfully';
   }
-  public static async uploadFile(file: any) {
-    const { createReadStream, filename, mimetype, encoding } = await file;
+  public static async followUser(userId: string, user: User) {
+    try {
+      const userExists = await prismaClient.user.findUnique({
+        where: {
+          id: userId,
+        },
+      });
 
-    // Invoking the `createReadStream` will return a Readable Stream.
-    // See https://nodejs.org/api/stream.html#stream_readable_streams
-    const stream = createReadStream();
+      if (!userExists)
+        return throwCustomError('User not found.', ErrorTypes.NOT_FOUND);
+      const existingFollow = await prismaClient.follows.findFirst({
+        where: {
+          followerId: user.id,
+          followingId: userId,
+        },
+      });
+      if (existingFollow)
+        return throwCustomError(
+          'You already follow this user.',
+          ErrorTypes.BAD_REQUEST
+        );
+      const follow = await prismaClient.follows.create({
+        data: {
+          followerId: user.id,
+          followingId: userId,
+        },
+      });
+      if (!follow) return false;
+      return true;
+    } catch (error: any) {
+      throw catchErrorHandler(error);
+    }
+  }
 
-    // This is purely for demonstration purposes and will overwrite the
-    // local-file-output.txt in the current working directory on EACH upload.
-    const out = require('fs').createWriteStream('local-file-output.txt');
-    stream.pipe(out);
-    await finished(out);
-
-    return { filename, mimetype, encoding };
+  public static async unfollowUser(userId: string, user: User) {
+    try {
+      const userExists = await prismaClient.user.findUnique({
+        where: {
+          id: userId,
+        },
+      });
+      if (!userExists)
+        return throwCustomError('User not found.', ErrorTypes.NOT_FOUND);
+      const existingFollow = await prismaClient.follows.findFirst({
+        where: {
+          followerId: user.id,
+          followingId: userId,
+        },
+      });
+      if (!existingFollow)
+        return throwCustomError(
+          'You dont follow this user.',
+          ErrorTypes.BAD_REQUEST
+        );
+      const follow = await prismaClient.follows.delete({
+        where: {
+          id: existingFollow.id,
+        },
+      });
+      if (!follow) return false;
+      return true;
+    } catch (error: any) {
+      throw catchErrorHandler(error);
+    }
   }
 }
 export default UserService;
