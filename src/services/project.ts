@@ -115,22 +115,39 @@ class ProjectService {
   public static async postProject(payload: ProjectPayload, user: User) {
     try {
       const nameTaken = await checkProjectExists(payload.name, user.id);
+
       if (nameTaken)
         return throwCustomError(
           'Name already Exists',
           ErrorTypes.BAD_USER_INPUT
         );
-      const project = await prismaClient.project.create({
-        data: {
-          ...payload,
-          slug: slugify(payload.name, { lower: true }),
-          link: payload.link,
-          owner: {
-            connect: {
-              id: user.id,
-            },
+
+      let data = {
+        ...payload,
+        slug: slugify(payload.name, { lower: true }),
+        owner: {
+          connect: {
+            id: user.id,
           },
         },
+      };
+      if (!payload.isForSale) {
+        if (data.price || data.level) {
+          return throwCustomError(
+            'Provide valid fields',
+            ErrorTypes.BAD_USER_INPUT
+          );
+        }
+      } else {
+        if (!data.price || !data.level) {
+          return throwCustomError(
+            'Provide Price, Level',
+            ErrorTypes.BAD_USER_INPUT
+          );
+        }
+      }
+      const project = await prismaClient.project.create({
+        data,
         include: {
           owner: true,
         },

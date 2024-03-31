@@ -1,8 +1,6 @@
 import UserService from '../../services/user';
+import { isUserAuthenticated } from '../../utils/helpers';
 import { CreateUserPayload, searchUserPayload } from '../../utils/types';
-// import { isUserAuthenticated } from '../../utils/helpers';
-// import { GraphQLUpload } from 'graphql-upload-minimal';
-// // import { GraphQLUpload } from 'graphql-upload';
 const queries = {
   getUser: async (_: any, payload: { userId: string }) => {
     const res = await UserService.getUser(payload.userId);
@@ -48,21 +46,28 @@ const mutations = {
     );
     return res;
   },
-  changePassword: async (
-    _: any,
-    payload: { oldPassword: string; newPassword: string },
-    context: any
-  ) => {
-    return await UserService.changePassword(
-      payload.oldPassword,
-      payload.newPassword,
-      context.user
-    );
-  },
-
-  uploadFile: async (_: any, payload: any, context: any) => {
-    console.log(payload.file);
-    return UserService.uploadFile(payload);
-  },
+  changePassword: isUserAuthenticated(
+    async (
+      _: any,
+      payload: { oldPassword: string; newPassword: string },
+      context: any
+    ) => {
+      return await UserService.changePassword(
+        payload.oldPassword,
+        payload.newPassword,
+        context.user
+      );
+    }
+  ),
+  followUser: isUserAuthenticated(
+    async (_: any, payload: { userId: string }, context: any) => {
+      return await UserService.followUser(payload.userId, context.user);
+    }
+  ),
+  unfollowUser: isUserAuthenticated(
+    async (_: any, payload: { userId: string }, context: any) => {
+      return await UserService.unfollowUser(payload.userId, context.user);
+    }
+  ),
 };
 export const resolvers = { queries, mutations };
