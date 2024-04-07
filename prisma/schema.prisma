@@ -25,15 +25,21 @@ enum UserRole{
   admin
   moderator
 }
+enum Gender{
+  male 
+  female
+  other
+}
 model User{
   id String @id  @default(uuid())
   email String @unique 
   password String @unique
   salt String?
+  gender Gender? 
   fullName String? @map("full_name")
   username String @unique
   bio String?
-  profilePhoto String? @map("profile_photo")
+  profilePhoto String? @default("https://i.ibb.co/CMtL75y/9306614.jpg") @map("profile_photo")
   skills String[]
   verified Boolean? @default(false)
   location Int[] // [latitude, Longitude]
@@ -81,6 +87,7 @@ model Project{
   tags String[]
   ownerId String 
   owner User @relation("owner",fields: [ownerId],references: [id])
+  photos String[]
   link String @map("hosted_link")
   demo String? 
   githubLink String? @map("github_links")

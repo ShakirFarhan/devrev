@@ -62,8 +62,9 @@ type Like{
   project:Project,
 }
 type AuthPayload{
-  token:String!,
+  token:String,
   user:User!
+  message:String
 }
 type SearchUsersResult{
   users:[User],

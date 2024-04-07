@@ -120,7 +120,7 @@ class UserService {
   }
   // Auth Using JWT
   public static async createUser(payload: CreateUserPayload) {
-    const { email, password, username, fullName } = payload;
+    const { email, password, username, firstName, lastName } = payload;
 
     try {
       if (password.length < 8)
@@ -153,7 +153,7 @@ class UserService {
           email,
           password: hashedPassword,
           salt,
-          fullName,
+          fullName: firstName + ' ' + lastName,
         },
       });
       let token = this.generateToken(
@@ -193,10 +193,12 @@ class UserService {
           id: payload.id,
         },
         select: {
+          id: true,
           email: true,
           provider: true,
           role: true,
           username: true,
+          profilePhoto: true,
         },
       });
       return user;
@@ -276,6 +278,7 @@ class UserService {
           'Incorrect Password',
           ErrorTypes.BAD_USER_INPUT
         );
+
       if (!user.verified) {
         const payload = {
           id: user.id,
