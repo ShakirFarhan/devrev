@@ -3,6 +3,7 @@ import { ErrorTypes, catchErrorHandler } from '../utils/error-handler';
 import { MessagePayload, User } from '../utils/types';
 import throwCustomError from '../utils/error-handler';
 import NotificationService from './notifications';
+import UserService from './user';
 class ChatService {
   // Chats
   public static async fetchChats(user: User) {
@@ -13,58 +14,107 @@ class ChatService {
             some: { id: { equals: user.id } },
           },
         },
+        include: {
+          latestMessage: true,
+          participants: true,
+          admins: true,
+        },
       });
       return chats;
     } catch (error) {
       throw catchErrorHandler(error);
     }
   }
-
-  public static async accessChat(userId: string, user: User) {
-    try {
-      const chat = await prismaClient.chat.findFirst({
-        where: {
-          type: {
-            not: 'group',
-          },
-          AND: [
-            {
-              participants: {
-                some: { id: userId },
-              },
-            },
-            {
-              participants: {
-                some: { id: user.id },
-              },
-            },
-          ],
+  private static async usersChat(senderId: string, recipientId: string) {
+    const chat = await prismaClient.chat.findFirst({
+      where: {
+        type: {
+          not: 'group',
         },
-        include: {
-          participants: true,
-          latestMessage: true,
-          messages: true,
-        },
-      });
-      if (!chat) {
-        let participants = [user.id, userId];
-        const newChat = await prismaClient.chat.create({
-          data: {
+        AND: [
+          {
             participants: {
-              connect: participants.map((id) => ({ id })),
+              some: { id: senderId },
             },
-            type: 'private',
           },
-          include: {
-            participants: true,
-            latestMessage: true,
-            messages: true,
+          {
+            participants: {
+              some: { id: recipientId },
+            },
           },
-        });
-        return newChat;
-      } else {
-        return chat;
-      }
+        ],
+      },
+      include: {
+        participants: true,
+        // latestMessage: {
+        //   include: {
+        //     sender: true,
+        //   },
+        // },
+      },
+    });
+    return chat;
+  }
+  public static async createChat(username: string, user: User) {
+    const recipient = await UserService.userByUsername(username);
+    if (!recipient)
+      return throwCustomError('User not Found', ErrorTypes.NOT_FOUND);
+    if (recipient.id === user.id)
+      return throwCustomError('Provide recipient Id', ErrorTypes.BAD_REQUEST);
+
+    const chat = await ChatService.usersChat(recipient.id, user.id);
+    if (chat)
+      return throwCustomError('Chat Already Exists', ErrorTypes.ALREADY_EXISTS);
+    let participants = [user.id, recipient.id];
+    const newChat = await prismaClient.chat.create({
+      data: {
+        participants: {
+          connect: participants.map((id) => ({ id })),
+        },
+        type: 'private',
+      },
+    });
+    return newChat;
+  }
+  public static async accessChat(
+    username: string,
+    user: User,
+    limit: number = 10,
+    page: number
+  ) {
+    try {
+      // Checking if the recipient exists or is not same as sender
+      const recipient = await UserService.userByUsername(username);
+      if (!recipient)
+        return throwCustomError('User not Found', ErrorTypes.NOT_FOUND);
+      if (recipient.id === user.id)
+        return throwCustomError('Provide recipient Id', ErrorTypes.BAD_REQUEST);
+
+      const chat = await ChatService.usersChat(recipient.id, user.id);
+      if (!chat)
+        return throwCustomError('Chat Not Found', ErrorTypes.NOT_FOUND);
+      const messages = await prismaClient.message.findMany({
+        where: {
+          chatId: chat.id,
+        },
+        take: limit,
+        skip: (page - 1) * limit,
+        include: {
+          sender: true,
+        },
+        // orderBy: {
+        //   createdAt: 'desc',
+        // },
+      });
+      return {
+        chat,
+        messages,
+        totalPages: Math.ceil(
+          (await prismaClient.message.count({ where: { chatId: chat.id } })) /
+            limit
+        ),
+        page,
+      };
     } catch (error) {
       throw catchErrorHandler(error);
     }
@@ -120,7 +170,14 @@ class ChatService {
       });
       if (!newMessage)
         return throwCustomError('Message not Sent.', ErrorTypes.BAD_REQUEST);
-
+      await prismaClient.chat.update({
+        where: {
+          id: payload.chatId,
+        },
+        data: {
+          latestMessageId: newMessage.id,
+        },
+      });
       return newMessage;
     } catch (error) {
       throw catchErrorHandler(error);

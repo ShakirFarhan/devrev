@@ -21,4 +21,11 @@ type Message {
 
 }
 
+type AccessChat{
+  chat:Chat!,
+  messages:[Message]
+  totalPages:Int!
+  page:Int!
+}
+
 `;

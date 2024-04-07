@@ -8,12 +8,26 @@ const queries = {
       return await ChatService.fetchChats(context.user);
     }
   ),
+  accessChats: isUserAuthenticated(
+    async (
+      _: any,
+      payload: { username: string; limit: number; page: number },
+      context: any
+    ) => {
+      return await ChatService.accessChat(
+        payload.username,
+        context.user,
+        payload.limit,
+        payload.page
+      );
+    }
+  ),
 };
 const mutations = {
   // Chats
-  accessChats: isUserAuthenticated(
-    async (_: any, payload: { userId: string }, context: any) => {
-      return await ChatService.accessChat(payload.userId, context.user);
+  createChat: isUserAuthenticated(
+    async (_: any, payload: { username: string }, context: any) => {
+      return await ChatService.createChat(payload.username, context.user);
     }
   ),
   deleteChat: isUserAuthenticated(
@@ -23,9 +37,11 @@ const mutations = {
   ),
 
   // Messages
-  sendMessage: isUserAuthenticated(async (_: any, payload: MessagePayload) => {
-    return await ChatService.sendMessage(payload);
-  }),
+  sendMessage: isUserAuthenticated(
+    async (_: any, payload: MessagePayload, context: any) => {
+      return await ChatService.sendMessage(payload);
+    }
+  ),
   deleteMessage: isUserAuthenticated(
     async (_: any, payload: { messageId: string }, context: any) => {
       return await ChatService.deleteMessage(payload.messageId, context.user);

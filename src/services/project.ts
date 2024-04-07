@@ -15,6 +15,7 @@ import { prismaClient } from '../lib/db';
 import { checkProjectExists } from '../utils/helpers';
 import NotificationService from './notifications';
 class ProjectService {
+  // fetch all projects
   public static async projects(payload: Projects) {
     const { limit = 10, page, name, tags } = payload;
     let query: any = {};
@@ -45,6 +46,7 @@ class ProjectService {
       throw catchErrorHandler(error);
     }
   }
+  // fetch all project details
   public static async getProjectReviews(projectId: string) {
     try {
       const reviews = await prismaClient.review.findMany({
@@ -75,6 +77,7 @@ class ProjectService {
       throw catchErrorHandler(error);
     }
   }
+  // Get Project details by slug
   public static async projectBySlug(ownerId: string, projectSlug: string) {
     try {
       const project = await prismaClient.project.findFirst({
@@ -94,6 +97,7 @@ class ProjectService {
       throw catchErrorHandler(error);
     }
   }
+  // Get Project details by Id
   public static async projectById(projectId: string) {
     try {
       const project = prismaClient.project.findUnique({
@@ -112,6 +116,23 @@ class ProjectService {
       throw catchErrorHandler(error);
     }
   }
+  public static async likes(projectId: string, user: User) {
+    try {
+      const projects = await prismaClient.like.findMany({
+        where: {
+          projectId,
+        },
+        include: {
+          project: true,
+          user: true,
+        },
+      });
+      return projects;
+    } catch (error) {
+      throw catchErrorHandler(error);
+    }
+  }
+  // Post new Project
   public static async postProject(payload: ProjectPayload, user: User) {
     try {
       const nameTaken = await checkProjectExists(payload.name, user.id);
@@ -163,7 +184,7 @@ class ProjectService {
       throw catchErrorHandler(error);
     }
   }
-
+  // Update exisiting project
   public static async updateProject(payload: ProjectPayload, user: User) {
     if (payload.projectId) {
       return throwCustomError('Provide Project id', ErrorTypes.BAD_USER_INPUT);
@@ -196,6 +217,7 @@ class ProjectService {
       throw catchErrorHandler(error);
     }
   }
+  // Delete exisiting project
   public static async deleteProject(projectId: string, user: User) {
     if (!projectId) {
       return throwCustomError('Provide Project id', ErrorTypes.BAD_USER_INPUT);
@@ -230,6 +252,7 @@ class ProjectService {
       throw catchErrorHandler(error);
     }
   }
+  // Add review to Project
   public static async postReview(review: ReviewPayload, user: User) {
     if (!(review.ratings > 0 && review.ratings <= 5)) {
       return throwCustomError(
@@ -316,6 +339,7 @@ class ProjectService {
       throw catchErrorHandler(error);
     }
   }
+  // Add Reply to exisiting project review/comment
   public static async addReply(reply: ReplyPayload, user: User) {
     try {
       console.log(reply);
@@ -452,22 +476,6 @@ class ProjectService {
         },
       });
       return true;
-    } catch (error) {
-      throw catchErrorHandler(error);
-    }
-  }
-  public static async likes(projectId: string, user: User) {
-    try {
-      const projects = await prismaClient.like.findMany({
-        where: {
-          projectId,
-        },
-        include: {
-          project: true,
-          user: true,
-        },
-      });
-      return projects;
     } catch (error) {
       throw catchErrorHandler(error);
     }

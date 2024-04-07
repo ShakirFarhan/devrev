@@ -4,7 +4,8 @@ export interface CreateUserPayload {
   email: string;
   password: string;
   username: string;
-  fullName: string;
+  firstName: string;
+  lastName: string;
 }
 export interface LoginUserPayload {
   email: string;
