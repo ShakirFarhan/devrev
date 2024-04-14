@@ -47,5 +47,10 @@ const mutations = {
       return await ChatService.deleteMessage(payload.messageId, context.user);
     }
   ),
+  sendMessageMockup: isUserAuthenticated(
+    async (_: any, payload: { chatId: string }, context: any) => {
+      return ChatService.sendMessageMockup(payload.chatId, context.user);
+    }
+  ),
 };
 export const resolvers = { queries, mutations };

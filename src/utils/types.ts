@@ -87,8 +87,9 @@ export interface ReplyPayload {
 export interface MessagePayload {
   message?: string;
   file?: string;
-  chatId: string;
-  userId: string;
+  chat: string;
+  sender: User;
+  createdAt: string;
 }
 export interface NotificationPayload {
   senderId?: string;

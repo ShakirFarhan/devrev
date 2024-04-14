@@ -4,6 +4,7 @@ import { MessagePayload, User } from '../utils/types';
 import throwCustomError from '../utils/error-handler';
 import NotificationService from './notifications';
 import UserService from './user';
+
 class ChatService {
   // Chats
   public static async fetchChats(user: User) {
@@ -102,9 +103,9 @@ class ChatService {
         include: {
           sender: true,
         },
-        // orderBy: {
-        //   createdAt: 'desc',
-        // },
+        orderBy: {
+          createdAt: 'desc',
+        },
       });
       return {
         chat,
@@ -151,28 +152,55 @@ class ChatService {
     }
   }
   public static blockUnblockChat() {}
+  public static sendMessageMockup(chatId: string, user: User) {
+    if (chatId && user) {
+      return true;
+    } else {
+      return false;
+    }
+  }
   // Messages
   public static async sendMessage(payload: MessagePayload) {
     try {
+      console.log('payload');
+      console.log(payload);
+
       const newMessage = await prismaClient.message.create({
         data: {
           message: payload.message,
-          chatId: payload.chatId,
-          senderId: payload.userId,
+          chatId: payload.chat,
+          senderId: payload.sender.id,
+          createdAt: new Date(payload.createdAt),
         },
         include: {
+          sender: true,
           chat: {
             select: {
               participants: true,
+              type: true,
             },
           },
         },
       });
+      const recipient =
+        newMessage.chat.type === 'private'
+          ? newMessage.chat.participants.find(
+              (participant) => participant.id !== payload.sender.id
+            )
+          : null;
+      if (!recipient) return;
+      await NotificationService.sendNotification({
+        senderId: payload.sender.id,
+        recipientId: recipient.id,
+        type: 'message',
+        content: `${newMessage.sender.fullName} Sent you a Message`,
+      });
       if (!newMessage)
         return throwCustomError('Message not Sent.', ErrorTypes.BAD_REQUEST);
+
       await prismaClient.chat.update({
         where: {
-          id: payload.chatId,
+          id: payload.chat,
         },
         data: {
           latestMessageId: newMessage.id,
