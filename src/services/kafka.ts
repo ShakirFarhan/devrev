@@ -9,6 +9,7 @@ import path from 'path';
 import fs from 'fs';
 import ChatService from './chat';
 import { MessagePayload } from '../utils/types';
+import { prismaClient } from '../lib/db';
 let producer: null | Producer;
 // Kafka Setup
 const kafka = new Kafka({
@@ -39,7 +40,7 @@ export async function produceMessage(
   const producer = await createProducer();
   await producer.send({
     messages: [
-      { key: message.userId + Date.now(), value: JSON.stringify(message) },
+      { key: message.sender.id + Date.now(), value: JSON.stringify(message) },
     ],
     topic: topic,
   });
@@ -64,6 +65,10 @@ export async function messageConsumer() {
           await ChatService.sendMessage(data);
         } catch (error) {
           // Delays the consumer's activity in case of an error
+          console.error(
+            'Error occurred while storing message in database:',
+            error
+          );
           pause();
           setTimeout(() => {
             consumer.resume([{ topic: 'MESSAGES' }]);
