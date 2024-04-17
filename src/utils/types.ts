@@ -42,6 +42,14 @@ export interface User {
   created_at: Date;
   updated_at: Date;
 }
+
+export interface UpdateUserPayload {
+  fullName: string;
+  bio: string;
+  profilePhoto: File;
+  skills: string[];
+  socials: object;
+}
 export interface searchUserPayload {
   limit: number;
   page: number;
@@ -134,7 +142,4 @@ export interface FileUpload {
   encoding: string;
   createReadStream: () => ReadStream;
 }
-
-export interface SingleUploadPayload {
-  file: Promise<FileUpload>;
-}
+export type File = Promise<FileUpload>;

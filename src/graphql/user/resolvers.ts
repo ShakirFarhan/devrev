@@ -1,6 +1,10 @@
 import UserService from '../../services/user';
 import { isUserAuthenticated } from '../../utils/helpers';
-import { CreateUserPayload, searchUserPayload } from '../../utils/types';
+import {
+  CreateUserPayload,
+  UpdateUserPayload,
+  searchUserPayload,
+} from '../../utils/types';
 const queries = {
   getUser: async (_: any, payload: { userId: string }) => {
     const res = await UserService.getUser(payload.userId);
@@ -57,6 +61,27 @@ const mutations = {
         payload.newPassword,
         context.user
       );
+    }
+  ),
+  updateUser: isUserAuthenticated(
+    async (
+      _: any,
+      payload: {
+        profilePhoto: File;
+        payload: UpdateUserPayload;
+      },
+      context: any
+    ) => {
+      let newPayload = {
+        ...payload.payload,
+        profilePhoto: payload.profilePhoto,
+      } as unknown as UpdateUserPayload;
+      return await UserService.updateUser(newPayload, context.user);
+    }
+  ),
+  updateUsername: isUserAuthenticated(
+    async (_: any, payload: any, context: any) => {
+      return await UserService.updateUsername(payload, context.user);
     }
   ),
   followUser: isUserAuthenticated(

@@ -1,18 +1,14 @@
 import { finished } from 'stream/promises';
-import { SingleUploadPayload } from '../../utils/types';
+import { File } from '../../utils/types';
+import { uploadFileToS3 } from '../../services/s3';
 
 const queries = {};
 const mutations = {
-  singleUpload: async (_: any, payload: SingleUploadPayload) => {
-    console.log(payload);
-    const { createReadStream, filename, mimetype, encoding } =
-      await payload.file;
-    const stream = createReadStream();
-    const out = require('fs').createWriteStream('local-file-output.txt');
-    stream.pipe(out);
-    await finished(out);
+  singleUpload: async (_: any, payload: { file: File }) => {
+    const url = await uploadFileToS3(payload.file, 'test');
+    console.log(url);
 
-    return { filename, mimetype, encoding };
+    return 'Hello';
   },
 };
 export const resolvers = { queries, mutations };
