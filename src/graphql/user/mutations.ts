@@ -8,5 +8,7 @@ export const mutations = `#graphql
   changePassword(oldPassword:String!,newPassword:String!):String
   followUser(userId:String!):Boolean
   unfollowUser(userId:String!):Boolean
+  updateUser(payload:updateUser,profilePhoto:Upload):User
+  updateUsername(username:String!):Boolean
 
 `;

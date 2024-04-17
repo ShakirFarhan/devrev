@@ -17,15 +17,22 @@ import {
   JWTTokenDetails,
   JWTTokenPayload,
   LoginUserPayload,
+  UpdateUserPayload,
   User,
   searchUserPayload,
 } from '../utils/types';
 import JWT from 'jsonwebtoken';
 import qs from 'qs';
 import axios from 'axios';
-import { generateUsername, sendMail } from '../utils/helpers';
+import {
+  generateRandomFilename,
+  generateUsername,
+  getObjectKey,
+  sendMail,
+} from '../utils/helpers';
 import { OAuth2Client } from 'google-auth-library';
 import { finished } from 'stream/promises';
+import { deleteFileFromS3, uploadFileToS3 } from './s3';
 const JWTSECRET = JWT_SECRET as unknown as string;
 
 class UserService {
@@ -482,6 +489,79 @@ class UserService {
       };
     } catch (error: any) {
       console.log(error);
+      throw catchErrorHandler(error);
+    }
+  }
+
+  public static async updateUser(payload: UpdateUserPayload, user: User) {
+    try {
+      const userToUpdate = await prismaClient.user.findUnique({
+        where: {
+          id: user.id,
+        },
+      });
+      if (!userToUpdate) return;
+      if (userToUpdate.profilePhoto) {
+        const profileKey = getObjectKey(userToUpdate.profilePhoto) as string;
+        await deleteFileFromS3(profileKey);
+      }
+
+      let profilePhotoUrl;
+      const profile = await payload.profilePhoto;
+      if (profile) {
+        const filename = generateRandomFilename(profile.filename);
+        profilePhotoUrl = await uploadFileToS3(
+          payload.profilePhoto,
+          `profiles/${user.username}/${filename}`
+        );
+      }
+
+      const updatedUser = await prismaClient.user.update({
+        where: {
+          id: user.id,
+        },
+        data: {
+          ...payload,
+          profilePhoto: profilePhotoUrl,
+        },
+      });
+      return updatedUser;
+    } catch (error) {
+      throw catchErrorHandler(error);
+    }
+  }
+  public static async updateUsername(username: string, user: User) {
+    try {
+      const usernameExists = await prismaClient.user.findFirst({
+        where: {
+          AND: [
+            {
+              username,
+            },
+            {
+              id: {
+                not: user.id,
+              },
+            },
+          ],
+        },
+      });
+      if (usernameExists) {
+        return throwCustomError(
+          'Username already Exists.',
+          ErrorTypes.ALREADY_EXISTS
+        );
+      }
+      await prismaClient.user.update({
+        where: {
+          id: user.id,
+        },
+        data: {
+          username,
+        },
+      });
+      return true;
+    } catch (error) {
       throw catchErrorHandler(error);
     }
   }

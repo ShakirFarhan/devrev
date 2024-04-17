@@ -118,12 +118,20 @@ export function generateNotificationMessage(
 
   return message;
 }
-// export const uploadFile = async (file: any, key: string) => {
-//   const { createReadStream, filename, mimetype, encoding } = await file;
-//   const stream = createReadStream();
-//   const out = require('fs').createWriteStream('local-file-output.txt');
-//   stream.pipe(out);
-//   await finished(out);
 
-//   return { filename, mimetype, encoding };
-// };
+export function generateRandomFilename(originalFilename: string) {
+  const extension = originalFilename.split('.').pop();
+  const numericTimestamp = Number(Date.now().toString());
+  const alphanumericString = numericTimestamp.toString(36).toLocaleUpperCase();
+  const newFilename = `${alphanumericString}.${extension}`;
+  return newFilename;
+}
+
+export function getObjectKey(location: string) {
+  if (!location) return;
+  if (!location.startsWith('https://') || !location.includes('.s3.')) {
+    throw new Error('Invalid Location');
+  }
+  const key = location.split('.amazonaws.com/')[1];
+  return key;
+}

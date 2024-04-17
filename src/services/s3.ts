@@ -1,20 +1,40 @@
 import * as Config from '../config/index';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
+import fs, { ReadStream } from 'fs';
+import { s3Client } from '../lib/s3';
+// import {  } from '@aws-sdk/client-s3';
+import { File } from '../utils/types';
+import { Upload } from '@aws-sdk/lib-storage';
+export const uploadFileToS3 = async (file: File, key: string) => {
+  try {
+    const inputFile = await file;
+    const upload = new Upload({
+      client: s3Client,
+      params: {
+        Bucket: Config.AWS_BUCKET,
+        Key: key,
+        Body: inputFile.createReadStream(),
+        ContentType: inputFile.mimetype,
+      },
+    });
+    const url = await upload.done();
+    return url.Location;
+  } catch (error) {
+    console.log('Error while uploading file to s3');
+    console.log(error);
+  }
+};
 
-const s3Client = new S3Client({
-  region: Config.AWS_REGION as string,
-  credentials: {
-    accessKeyId: Config.AWS_ACCESS_KEY as string,
-    secretAccessKey: Config.AWS_SECRET_ACCESS_KEY as string,
-  },
-});
-
-export const uploadToS3 = async (key: string, body: string) => {
-  const command = new PutObjectCommand({
-    Bucket: Config.AWS_BUCKET,
-    Key: key,
-    Body: body,
-  });
-
-  await s3Client.send(command);
+export const deleteFileFromS3 = async (key: string) => {
+  try {
+    const deleteCommand = new DeleteObjectCommand({
+      Bucket: Config.AWS_BUCKET,
+      Key: key,
+    });
+    await s3Client.send(deleteCommand);
+    console.log('File deleted Successfully..');
+  } catch (error) {
+    console.log('Error while deleting file to s3');
+    console.log(error);
+  }
 };

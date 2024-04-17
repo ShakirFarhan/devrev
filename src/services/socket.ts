@@ -50,6 +50,7 @@ class SocketService {
       );
       // When user Disconnects
       socket.on('disconnectUser', async () => {
+        console.log('disconnecting');
         const mapExists = await pub.hget('userSocketMapping', userId);
 
         if (mapExists) {

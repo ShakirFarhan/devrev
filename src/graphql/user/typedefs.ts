@@ -77,4 +77,16 @@ type File {
   mimetype: String!
   encoding: String!
 }
+input FileInput{
+  filename: String!
+  mimetype: String!
+  encoding: String!
+}
+input updateUser{
+fullName:String,
+bio:String,
+# profilePhoto:FileInput,
+skills:[String],
+socials:String
+}
 `;
