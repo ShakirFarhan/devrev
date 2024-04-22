@@ -1,3 +1,4 @@
+import NotificationService from '../../services/notifications';
 import UserService from '../../services/user';
 import { isUserAuthenticated } from '../../utils/helpers';
 import {
@@ -21,6 +22,17 @@ const queries = {
   },
   isValidUser: async (_: any, payload: { token: string }) => {
     return await UserService.isValidUser(payload.token);
+  },
+  getNotifications: async (
+    _: any,
+    payload: { page: number; limit: number },
+    context: any
+  ) => {
+    return await NotificationService.myNotifications(
+      payload.page,
+      payload.limit,
+      context.user
+    );
   },
 };
 const mutations = {

@@ -31,7 +31,6 @@ import {
   sendMail,
 } from '../utils/helpers';
 import { OAuth2Client } from 'google-auth-library';
-import { finished } from 'stream/promises';
 import { deleteFileFromS3, uploadFileToS3 } from './s3';
 const JWTSECRET = JWT_SECRET as unknown as string;
 
@@ -209,7 +208,6 @@ class UserService {
         },
       });
       return user;
-      return {};
     } catch (error) {
       console.log(error);
       throwCustomError('JWT Expired', ErrorTypes.BAD_REQUEST);
@@ -291,6 +289,7 @@ class UserService {
           id: user.id,
           email: user.email,
         };
+
         let token = UserService.generateToken(payload, '1d');
         await sendMail(user.email, token);
         return {

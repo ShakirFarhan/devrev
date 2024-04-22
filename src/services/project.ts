@@ -295,6 +295,7 @@ class ProjectService {
         senderId: user.id,
         content: `${user.username + ' reviewed your Project.'}`,
         type: 'review',
+        redirectUri: '',
       };
       if (user.id !== notification.recipientId) {
         await NotificationService.sendNotification(notification);
@@ -373,7 +374,8 @@ class ProjectService {
         sendTo,
         user,
         'reply',
-        newReply.project.name
+        newReply.project.name,
+        ''
       );
       return newReply;
     } catch (error) {
@@ -454,7 +456,8 @@ class ProjectService {
         sendTo,
         user,
         'like',
-        like.project.name
+        like.project.name,
+        ''
       );
       return true;
     } catch (error) {

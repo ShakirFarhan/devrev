@@ -94,7 +94,7 @@ export interface ReplyPayload {
 
 export interface MessagePayload {
   message?: string;
-  file?: string;
+  file?: File;
   chat: string;
   sender: User;
   createdAt: string;
@@ -103,6 +103,7 @@ export interface NotificationPayload {
   senderId?: string;
   recipientId: string;
   type: 'like' | 'reply' | 'message' | 'review';
+  redirectUri: string;
   content: string;
   status?: 'seen' | 'unseen';
 }
@@ -143,3 +144,13 @@ export interface FileUpload {
   createReadStream: () => ReadStream;
 }
 export type File = Promise<FileUpload>;
+
+export interface Notification {
+  id: string;
+  sender: User;
+  recipient: User;
+  status: 'seen' | 'unseen';
+  content: string;
+  type: 'like' | 'reply' | 'message' | 'review';
+  redirectUri: string;
+}
