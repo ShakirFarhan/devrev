@@ -5,4 +5,5 @@ export const queries = `#graphql
     userByEmail(email:String!):User
     userByUsername(username:String!):User
     isValidUser(token:String!):User
+    getNotifications(page:Int!,limit:Int!):[GroupedNotifications]
 `;

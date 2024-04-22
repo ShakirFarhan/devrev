@@ -68,7 +68,6 @@ model Follows {
   id String @id @default(uuid())
   follower    User @relation("follower", fields: [followerId], references: [id])
   followerId  String
-
   following   User @relation("following", fields: [followingId], references: [id])
   followingId String
   @@index([followerId, followingId])
@@ -184,6 +183,7 @@ model Notification{
   recipient User @relation("receivedNotifications",fields: [recipientId],references: [id])
   type NotificationType 
   content String
-  status NotificationStatus @default(seen)
+  redirectUri String?
+  status NotificationStatus @default(unseen)
   createdAt DateTime @default(now()) @map("created_at")
 }

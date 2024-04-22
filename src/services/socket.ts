@@ -65,6 +65,7 @@ class SocketService {
       if (channel === 'MESSAGES') {
         // Handling Chat Messages Related Data.
         const data = JSON.parse(message) as MessagePayload;
+
         await produceMessage(data, 'MESSAGES');
 
         io.to(data.chat).emit('message', data);

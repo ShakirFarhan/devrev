@@ -9,7 +9,6 @@ import path from 'path';
 import fs from 'fs';
 import ChatService from './chat';
 import { MessagePayload } from '../utils/types';
-import { prismaClient } from '../lib/db';
 let producer: null | Producer;
 // Kafka Setup
 const kafka = new Kafka({
@@ -62,7 +61,10 @@ export async function messageConsumer() {
         try {
           // Storing Messages in DB
           let data = JSON.parse(message.value.toString()) as MessagePayload;
-          await ChatService.sendMessage(data);
+
+          if (!data.file) {
+            await ChatService.sendMessage(data);
+          }
         } catch (error) {
           // Delays the consumer's activity in case of an error
           console.error(

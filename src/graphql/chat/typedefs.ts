@@ -20,7 +20,7 @@ type Message {
   createdAt:String
 
 }
-
+scalar Date
 type AccessChat{
   chat:Chat!,
   messages:[Message]

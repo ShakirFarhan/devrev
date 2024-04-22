@@ -7,6 +7,8 @@ type UserDetails {
   updated_at: Int
 }
 scalar JSON
+
+
 type User {
   id:ID,
   username:String,
@@ -52,6 +54,7 @@ input UserInput {
   id:ID,
   username:String,
   email:String,
+  profilePhoto:String,
   provider:String,
   created_at:Int,
   updated_at:Int,
@@ -89,4 +92,21 @@ bio:String,
 skills:[String],
 socials:String
 }
+
+type Notification{
+  id:ID,
+  sender:User,
+  recipient:User,
+  type:String,
+  content:String,
+  status:String,
+  createdAt:String,
+  redirectUri:String
+}
+type GroupedNotifications {
+  key:String!,
+  notification:Notification!,
+  count:Int!
+}
+
 `;

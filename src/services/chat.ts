@@ -4,6 +4,8 @@ import { MessagePayload, User } from '../utils/types';
 import throwCustomError from '../utils/error-handler';
 import NotificationService from './notifications';
 import UserService from './user';
+import { uploadFileToS3 } from './s3';
+import { generateRandomFilename } from '../utils/helpers';
 
 class ChatService {
   // Chats
@@ -161,15 +163,22 @@ class ChatService {
   }
   // Messages
   public static async sendMessage(payload: MessagePayload) {
-    try {
-      console.log('payload');
-      console.log(payload);
+    let fileUrl;
 
+    if (payload.file) {
+      const filename = generateRandomFilename((await payload.file).filename);
+      fileUrl = await uploadFileToS3(
+        payload.file,
+        `chats/${Date.now().toString()}/${filename}`
+      );
+    }
+    try {
       const newMessage = await prismaClient.message.create({
         data: {
           message: payload.message,
           chatId: payload.chat,
           senderId: payload.sender.id,
+          file: fileUrl,
           createdAt: new Date(payload.createdAt),
         },
         include: {
@@ -189,12 +198,14 @@ class ChatService {
             )
           : null;
       if (!recipient) return;
-      await NotificationService.sendNotification({
+      const not = await NotificationService.sendNotification({
         senderId: payload.sender.id,
         recipientId: recipient.id,
         type: 'message',
-        content: `${newMessage.sender.fullName} Sent you a Message`,
+        content: `Sent you a Message`,
+        redirectUri: `/messages/${payload.sender.username}`,
       });
+      console.log(not);
       if (!newMessage)
         return throwCustomError('Message not Sent.', ErrorTypes.BAD_REQUEST);
 
@@ -208,6 +219,7 @@ class ChatService {
       });
       return newMessage;
     } catch (error) {
+      console.log(error);
       throw catchErrorHandler(error);
     }
   }

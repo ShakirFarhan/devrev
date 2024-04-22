@@ -6,8 +6,8 @@ import throwCustomError, {
 } from '../utils/error-handler';
 import {
   EmitNotificationPayload,
+  Notification,
   NotificationPayload,
-  ProjectPayload,
   User,
 } from '../utils/types';
 import SocketService from './socket';
@@ -15,6 +15,7 @@ import { generateNotificationMessage } from '../utils/helpers';
 class NotificationService {
   private static socketService = new SocketService();
   public static async sendNotification(payload: NotificationPayload) {
+    console.log(payload);
     try {
       const notification = await prismaClient.notification.create({
         data: {
@@ -37,6 +38,8 @@ class NotificationService {
           },
         },
       });
+      console.log('Notification');
+      console.log(notification);
       if (!notification)
         return throwCustomError(
           'Failed to Send Notification',
@@ -54,7 +57,8 @@ class NotificationService {
     recipients: string[],
     currUser: User,
     type: 'like' | 'reply' | 'message' | 'review',
-    projectName: string
+    projectName: string,
+    redirectUri: string
   ) {
     const message = generateNotificationMessage(
       currUser.username,
@@ -67,6 +71,7 @@ class NotificationService {
         senderId: currUser.id,
         content: message,
         type: type,
+        redirectUri,
       };
       if (currUser.id !== notification.recipientId) {
         console.log('Notification Sent.');
@@ -74,14 +79,50 @@ class NotificationService {
       }
     });
   }
-  public static async myNotifications(user: User) {
+  private static async groupeNotifications(notifications: Notification[]) {
+    let groupedArray: {
+      key: string;
+      count: number;
+      notification: Notification;
+    }[] = [];
+    notifications.forEach((notification) => {
+      const key = ((notification.sender.id as string) +
+        ':' +
+        notification.type) as string;
+      const notificationIndex = groupedArray.findIndex(
+        (val) => val.key === key
+      );
+      if (notificationIndex === -1) {
+        groupedArray.push({ key, notification, count: 1 });
+      } else {
+        groupedArray[notificationIndex].count++;
+      }
+    });
+
+    return groupedArray;
+  }
+  public static async myNotifications(
+    page: number = 1,
+    limit: number = 10,
+    user: User
+  ) {
     try {
       const notifications = await prismaClient.notification.findMany({
         where: {
           recipientId: user.id,
         },
+        include: {
+          sender: true,
+          recipient: true,
+        },
+        take: limit,
+        skip: (page - 1) * limit,
       });
-      return notifications;
+
+      const groupedNotifications = await this.groupeNotifications(
+        notifications as unknown as Notification[]
+      );
+      return groupedNotifications;
     } catch (error) {
       throw catchErrorHandler(error);
     }

@@ -11,4 +11,5 @@ export const mutations = `#graphql
   updateUser(payload:updateUser,profilePhoto:Upload):User
   updateUsername(username:String!):Boolean
 
+
 `;
