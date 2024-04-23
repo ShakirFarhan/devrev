@@ -98,6 +98,7 @@ export interface MessagePayload {
   chat: string;
   sender: User;
   createdAt: string;
+  recipients: string[];
 }
 export interface NotificationPayload {
   senderId?: string;

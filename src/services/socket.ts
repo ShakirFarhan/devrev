@@ -21,16 +21,12 @@ class SocketService {
 
     io.on('connection', (socket) => {
       let userId = socket.handshake.query?.userId as string;
-
-      console.log('userId: ', userId);
-      console.log('Socket Id: ', socket.id);
-      socket.on('mapIds', async (data) => {
+      socket.on('mapIds', async ({ user_id, socket_id }) => {
         if (!userId) return;
-
-        if (await pub.hexists('userSocketMapping', userId)) {
+        if (await pub.hexists('userSocketMapping', user_id)) {
           return;
         }
-        await pub.hset('userSocketMapping', userId, socket.id);
+        await pub.hset('userSocketMapping', user_id, socket_id);
       });
 
       // User or Group Join
@@ -40,22 +36,27 @@ class SocketService {
       // When user send's message
       socket.on(
         'message',
-        async ({ message, chat, file, sender, createdAt }) => {
+        async ({ message, chat, file, sender, createdAt, recipients }) => {
           // Sending message to Redis
           await pub.publish(
             'MESSAGES',
-            JSON.stringify({ message, chat, file, sender, createdAt })
+            JSON.stringify({
+              message,
+              chat,
+              file,
+              sender,
+              createdAt,
+              recipients,
+            })
           );
         }
       );
       // When user Disconnects
-      socket.on('disconnectUser', async () => {
-        console.log('disconnecting');
-        const mapExists = await pub.hget('userSocketMapping', userId);
+      socket.on('disconnectUser', async (user_id) => {
+        const mapExists = await pub.hget('userSocketMapping', user_id);
 
         if (mapExists) {
-          if (mapExists !== socket.id) return;
-          pub.hdel('userSocketMapping', userId);
+          await pub.hdel('userSocketMapping', user_id);
         }
         return;
       });
@@ -69,6 +70,17 @@ class SocketService {
         await produceMessage(data, 'MESSAGES');
 
         io.to(data.chat).emit('message', data);
+        const userId = await SocketService.getSocketByUserId(data.sender.id);
+        data.recipients.forEach(async (rec) => {
+          const socketId = (await SocketService.getSocketByUserId(
+            rec
+          )) as string;
+
+          if (rec === userId) {
+            return;
+          }
+          io.in(socketId).emit('message:notification', data);
+        });
       } else if (channel === 'NOTIFICATIONS') {
         // Handling Notifications Related Data.
         // await produceMessage(data,"NOTIFICATIONS")
