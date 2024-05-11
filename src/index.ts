@@ -9,7 +9,7 @@ import cors from 'cors';
 import http from 'http';
 import { messageConsumer } from './services/kafka';
 async function init() {
-  // messageConsumer();
+  messageConsumer();
   const socketService = new SocketService();
   const app = express();
   const server = http.createServer(app);

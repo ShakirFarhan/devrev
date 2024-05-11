@@ -2,7 +2,6 @@ import { prismaClient } from '../lib/db';
 import { ErrorTypes, catchErrorHandler } from '../utils/error-handler';
 import { MessagePayload, User } from '../utils/types';
 import throwCustomError from '../utils/error-handler';
-import NotificationService from './notifications';
 import UserService from './user';
 import { uploadFileToS3 } from './s3';
 import { generateRandomFilename } from '../utils/helpers';
@@ -164,7 +163,7 @@ class ChatService {
   // Messages
   public static async sendMessage(payload: MessagePayload) {
     let fileUrl;
-
+    console.log('I am running');
     if (payload.file) {
       const filename = generateRandomFilename((await payload.file).filename);
       fileUrl = await uploadFileToS3(
@@ -198,14 +197,6 @@ class ChatService {
             )
           : null;
       if (!recipient) return;
-      const not = await NotificationService.sendNotification({
-        senderId: payload.sender.id,
-        recipientId: recipient.id,
-        type: 'message',
-        content: `Sent you a Message`,
-        redirectUri: `/messages/${payload.sender.username}`,
-      });
-      console.log(not);
       if (!newMessage)
         return throwCustomError('Message not Sent.', ErrorTypes.BAD_REQUEST);
 

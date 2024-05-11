@@ -5,9 +5,7 @@ import { uploadFileToS3 } from '../../services/s3';
 const queries = {};
 const mutations = {
   singleUpload: async (_: any, payload: { file: File }) => {
-    console.log(payload.file);
     const url = await uploadFileToS3(payload.file, 'test');
-    console.log(url);
 
     // return 'Hello';
   },

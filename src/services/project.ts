@@ -343,7 +343,6 @@ class ProjectService {
   // Add Reply to exisiting project review/comment
   public static async addReply(reply: ReplyPayload, user: User) {
     try {
-      console.log(reply);
       const newReply = await prismaClient.reply.create({
         data: {
           message: reply.message,
@@ -358,6 +357,7 @@ class ProjectService {
           project: {
             select: {
               name: true,
+              slug: true,
               ownerId: true,
             },
           },
@@ -375,7 +375,7 @@ class ProjectService {
         user,
         'reply',
         newReply.project.name,
-        ''
+        `/project/${newReply.project.slug}`
       );
       return newReply;
     } catch (error) {
@@ -447,6 +447,7 @@ class ProjectService {
             select: {
               ownerId: true,
               name: true,
+              slug: true,
             },
           },
         },
@@ -457,7 +458,7 @@ class ProjectService {
         user,
         'like',
         like.project.name,
-        ''
+        `/project/${like.project.slug}`
       );
       return true;
     } catch (error) {

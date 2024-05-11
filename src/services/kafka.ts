@@ -60,6 +60,8 @@ export async function messageConsumer() {
       if (topic === 'MESSAGES') {
         try {
           // Storing Messages in DB
+          // consumer
+
           let data = JSON.parse(message.value.toString()) as MessagePayload;
 
           if (!data.file) {
