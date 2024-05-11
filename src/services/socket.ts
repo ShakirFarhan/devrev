@@ -21,12 +21,16 @@ class SocketService {
 
     io.on('connection', (socket) => {
       let userId = socket.handshake.query?.userId as string;
-      socket.on('mapIds', async ({ user_id, socket_id }) => {
-        if (!userId) return;
-        if (await pub.hexists('userSocketMapping', user_id)) {
-          return;
+      socket.on('mapIds', async (data) => {
+        if (!data) return;
+        const { user_id, socket_id } = data;
+        if (!user_id) return;
+        if (user_id && socket_id) {
+          if (await pub.hexists('userSocketMapping', user_id)) {
+            return;
+          }
+          await pub.hset('userSocketMapping', user_id, socket_id);
         }
-        await pub.hset('userSocketMapping', user_id, socket_id);
       });
 
       // User or Group Join
@@ -38,6 +42,7 @@ class SocketService {
         'message',
         async ({ message, chat, file, sender, createdAt, recipients }) => {
           // Sending message to Redis
+
           await pub.publish(
             'MESSAGES',
             JSON.stringify({
@@ -71,6 +76,7 @@ class SocketService {
 
         io.to(data.chat).emit('message', data);
         const userId = await SocketService.getSocketByUserId(data.sender.id);
+
         data.recipients.forEach(async (rec) => {
           const socketId = (await SocketService.getSocketByUserId(
             rec
@@ -79,7 +85,14 @@ class SocketService {
           if (rec === userId) {
             return;
           }
-          io.in(socketId).emit('message:notification', data);
+
+          io.in(socketId).emit('message:notification', {
+            sender: data.sender,
+            chat: data.chat,
+            message: data.message,
+            createdAt: data.createdAt,
+            file: data.file,
+          });
         });
       } else if (channel === 'NOTIFICATIONS') {
         // Handling Notifications Related Data.

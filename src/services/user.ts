@@ -429,6 +429,7 @@ class UserService {
             grant_type: 'authorization_code',
           }
         );
+
         if (!data.id_token)
           return throwCustomError(
             'Something went wrong. Try Again',

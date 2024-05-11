@@ -15,7 +15,6 @@ import { generateNotificationMessage } from '../utils/helpers';
 class NotificationService {
   private static socketService = new SocketService();
   public static async sendNotification(payload: NotificationPayload) {
-    console.log(payload);
     try {
       const notification = await prismaClient.notification.create({
         data: {
@@ -38,8 +37,6 @@ class NotificationService {
           },
         },
       });
-      console.log('Notification');
-      console.log(notification);
       if (!notification)
         return throwCustomError(
           'Failed to Send Notification',
@@ -117,12 +114,16 @@ class NotificationService {
         },
         take: limit,
         skip: (page - 1) * limit,
+        orderBy: {
+          createdAt: 'desc',
+        },
       });
 
       const groupedNotifications = await this.groupeNotifications(
         notifications as unknown as Notification[]
       );
-      return groupedNotifications;
+      // return groupedNotifications;
+      return notifications;
     } catch (error) {
       throw catchErrorHandler(error);
     }

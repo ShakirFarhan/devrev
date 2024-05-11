@@ -100,19 +100,17 @@ export function generateNotificationMessage(
 
   switch (type) {
     case 'like':
-      message = `${username} has liked your project ${projectname}.`;
+      message = `<span>${username}</span> has liked your project <span>${projectname}</span>.`;
       break;
     case 'reply':
-      message = `${username} added a reply in ${projectname}.`;
+      message = `<span>${username}</span> added a reply in <span>${projectname}</span>.`;
       break;
-    case 'message':
-      message = `${username} has sent you a message.".`;
-      break;
+
     case 'review':
-      message = `${username} has reviewed your project ${projectname}.`;
+      message = `<span>${username}</span> has reviewed your project <span>${projectname}</span>.`;
       break;
     default:
-      message = `You have a new notification regarding your project ${projectname}.`;
+      message = `You have a new notification regarding your project <span>${projectname}</span>.`;
       break;
   }
 
