@@ -1,5 +1,5 @@
 export const mutations = `#graphql
-postProject(name:String!,description:String!,tags:[String!],link:String!,demo:String,githubLink:String):Project
+postProject(name:String!,description:String!,tags:[String!],link:String!,demo:String,githubLink:String,overview:String,includes:String):Project
 updateProject(projectId:String!,name:String!,description:String!,tags:[String!],link:String!,demo:String,githubLink:String):Project
 deleteProject(projectId:String!):Project
 likeProject(projectId:String!):Boolean
