@@ -80,7 +80,9 @@ enum ProjectLevel{
 model Project{
   id String  @id  @default(uuid())
   name String
+  overview String
   description String
+  includes String
   coverImage String? @map("cover_image")
   slug String
   tags String[]

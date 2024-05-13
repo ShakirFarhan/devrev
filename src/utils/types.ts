@@ -65,6 +65,8 @@ export interface ProjectPayload {
   tags: string[];
   link: string;
   demo?: string;
+  overview: string;
+  includes: string;
   technologies: string[];
   githubLink?: string;
   isForSale?: boolean;

@@ -426,6 +426,14 @@ class ProjectService {
       throw catchErrorHandler(error);
     }
   }
+
+  public static buy(projectId: string, user: User) {
+    try {
+      // const project
+    } catch (error) {
+      throw catchErrorHandler(error);
+    }
+  }
   public static async projectCodeFromGithub(githubUrl: string, user: User) {}
 
   public static async likeProject(projectId: string, user: User) {
