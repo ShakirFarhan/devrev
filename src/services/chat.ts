@@ -193,7 +193,7 @@ class ChatService {
       const recipient =
         newMessage.chat.type === 'private'
           ? newMessage.chat.participants.find(
-              (participant) => participant.id !== payload.sender.id
+              (participant: any) => participant.id !== payload.sender.id
             )
           : null;
       if (!recipient) return;
