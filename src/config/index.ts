@@ -24,4 +24,5 @@ export const {
   KAFKA_PORT,
   KAFKA_USERNAME,
   KAFKA_PASSWORD,
+  KAFKA_CA_PATH,
 } = process.env;
