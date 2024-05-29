@@ -11,6 +11,16 @@ import ChatService from './chat';
 import { MessagePayload } from '../utils/types';
 let producer: null | Producer;
 // Kafka Setup
+
+function createCaFile() {
+  const caPem = process.env.CA_PEM;
+  if (!caPem) {
+    throw new Error('CA_PEM environment variable is not set');
+  }
+  fs.writeFileSync(path.resolve('./ca.pem'), caPem);
+}
+
+createCaFile();
 const kafka = new Kafka({
   brokers: [`${KAFKA_HOST}:${KAFKA_PORT}`],
   ssl: {
