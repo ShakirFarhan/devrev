@@ -5,7 +5,7 @@ on:
     branches: [ "main" ]
 
 env:
-  AWS_REGION: ap-sout-1        
+  AWS_REGION: ap-south-1        
   # ECR_REPOSITORY: MY_ECR_REPOSITORY     
   # ECS_SERVICE: MY_ECS_SERVICE  
   # ECS_CLUSTER: MY_ECS_CLUSTER   
@@ -30,7 +30,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: 'ap-sout-1'
+        aws-region: ${{ env.AWS_REGION }}
 
     - name: Login to Amazon ECR
       id: login-ecr
