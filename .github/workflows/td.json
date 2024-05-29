@@ -1,0 +1,154 @@
+{
+    "taskDefinitionArn": "arn:aws:ecs:ap-south-1:992382485188:task-definition/boostmydevbackend-task:5",
+    "containerDefinitions": [
+        {
+            "name": "boostmydev-backend",
+            "image": "992382485188.dkr.ecr.ap-south-1.amazonaws.com/boostmydev-backend:latest",
+            "cpu": 0,
+            "portMappings": [
+                {
+                    "name": "boostmydev-backend-8000-tcp",
+                    "containerPort": 8000,
+                    "hostPort": 8000,
+                    "protocol": "tcp",
+                    "appProtocol": "http"
+                }
+            ],
+            "essential": true,
+            "environment": [
+                {
+                    "name": "CLIENT_URL",
+                    "value": "http://localhost:3000"
+                },
+                {
+                    "name": "REDIS_PASSWORD",
+                    "value": "arn:aws:secretsmanager:ap-south-1:992382485188:secret:BMD_REDIS_PASSWORD-gDupFG"
+                },
+                {
+                    "name": "REDIS_USERNAME",
+                    "value": "default"
+                },
+                {
+                    "name": "KAFKAJS_NO_PARTITIONER_WARNING",
+                    "value": "1"
+                }
+            ],
+            "environmentFiles": [],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "secrets": [
+                {
+                    "name": "CA_PEM",
+                    "valueFrom": "arn:aws:secretsmanager:ap-south-1:992382485188:secret:CA_PEM-HCV6Rk"
+                },
+                {
+                    "name": "DATABASE_URL",
+                    "valueFrom": "arn:aws:secretsmanager:ap-south-1:992382485188:secret:BMD_DATABASE_URL-83T5Er"
+                },
+                {
+                    "name": "KAFKA_HOST",
+                    "valueFrom": "arn:aws:secretsmanager:ap-south-1:992382485188:secret:BMD_KAFKA_HOST-wIdDZA"
+                },
+                {
+                    "name": "KAFKA_PASSWORD",
+                    "valueFrom": "arn:aws:secretsmanager:ap-south-1:992382485188:secret:BMD_KAFKA_PASSWORD-lE5ZCv"
+                },
+                {
+                    "name": "KAFKA_PORT",
+                    "valueFrom": "arn:aws:secretsmanager:ap-south-1:992382485188:secret:BMD_KAFKA_PORT-hP5kr7"
+                },
+                {
+                    "name": "KAFKA_USERNAME",
+                    "valueFrom": "arn:aws:secretsmanager:ap-south-1:992382485188:secret:BMD_KAFKA_USERNAME-WAtcQw"
+                },
+                {
+                    "name": "REDIS_HOST",
+                    "valueFrom": "arn:aws:secretsmanager:ap-south-1:992382485188:secret:BMD_REDIS_HOST-taayG5"
+                },
+                {
+                    "name": "REDIS_PORT",
+                    "valueFrom": "arn:aws:secretsmanager:ap-south-1:992382485188:secret:BMD_REDIS_PORT-ZiQUZe"
+                }
+            ],
+            "ulimits": [],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-create-group": "true",
+                    "awslogs-group": "/ecs/boostmydevbackend-task",
+                    "awslogs-region": "ap-south-1",
+                    "awslogs-stream-prefix": "ecs"
+                },
+                "secretOptions": []
+            },
+            "healthCheck": {
+                "command": [
+                    "CMD-SHELL",
+                    "curl -f http://localhost:8000/health || exit 1"
+                ],
+                "interval": 30,
+                "timeout": 5,
+                "retries": 3
+            },
+            "systemControls": []
+        }
+    ],
+    "family": "boostmydevbackend-task",
+    "executionRoleArn": "arn:aws:iam::992382485188:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "revision": 5,
+    "volumes": [],
+    "status": "ACTIVE",
+    "requiresAttributes": [
+        {
+            "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.24"
+        },
+        {
+            "name": "ecs.capability.execution-role-awslogs"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.ecr-auth"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+        },
+        {
+            "name": "ecs.capability.secrets.asm.environment-variables"
+        },
+        {
+            "name": "ecs.capability.container-health-check"
+        },
+        {
+            "name": "ecs.capability.execution-role-ecr-pull"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+        },
+        {
+            "name": "ecs.capability.task-eni"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
+        }
+    ],
+    "placementConstraints": [],
+    "compatibilities": [
+        "EC2",
+        "FARGATE"
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "1024",
+    "memory": "3072",
+    "runtimePlatform": {
+        "cpuArchitecture": "X86_64",
+        "operatingSystemFamily": "LINUX"
+    },
+    "registeredAt": "2024-05-29T14:20:33.926Z",
+    "registeredBy": "arn:aws:iam::992382485188:root",
+    "tags": []
+}
