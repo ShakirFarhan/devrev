@@ -22,6 +22,9 @@ async function init() {
       origin: '*',
     })
   );
+  app.get('/health', (req, res) => {
+    res.status(200).json({ message: 'Backend is running fine.' });
+  });
   app.use(
     '/graphql',
     expressMiddleware(await createApolloGraphQLServer(app), {
