@@ -23,7 +23,7 @@ async function init() {
     })
   );
   app.get('/health', (req, res) => {
-    res.status(200).json({ message: 'Backend is running fine.' });
+    res.status(200).json({ message: 'Server is healthy.' });
   });
   app.use(
     '/graphql',
